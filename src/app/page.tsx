@@ -23,6 +23,10 @@ export default function Home() {
     }
   };
 
+  const removeFromQueue = async (userId: string) => {
+    await supabase.from("queue").delete().eq("user_id", userId);
+  };
+
   useEffect(() => {
     setIsMounted(true);
     let userId = localStorage.getItem("vlr_duel_id") || crypto.randomUUID();
@@ -58,12 +62,26 @@ export default function Home() {
       setOnlineUsers(users);
       const challengers = users.filter(u => u.challenging === userId);
       setChallengeStack(challengers.map(c => ({ id: c.id, name: c.name })));
+
+      const onlineIds = new Set(users.map(u => u.id));
+      setQueueList(prev => {
+        const filtered = prev.filter(p => onlineIds.has(p.user_id));
+        prev.forEach(p => {
+          if (!onlineIds.has(p.user_id)) removeFromQueue(p.user_id);
+        });
+        return filtered;
+      });
     };
 
     presenceChannelRef.current
       .on("presence", { event: "sync" }, handlePresenceSync)
       .on("presence", { event: "join" }, handlePresenceSync)
-      .on("presence", { event: "leave" }, handlePresenceSync)
+      .on("presence", { event: "leave" }, ({ leftPresences }: any) => {
+        leftPresences.forEach((p: any) => {
+          if (p.key) removeFromQueue(p.key);
+        });
+        handlePresenceSync();
+      })
       .on("broadcast", { event: "duel_declined" }, (payload: any) => {
         if (payload.payload.challengerId === userId) {
           setIsWaitingForResponse(null);
@@ -83,7 +101,21 @@ export default function Home() {
         }
       });
 
+    const handleTabClose = () => {
+      const currentId = localStorage.getItem("vlr_duel_id");
+      if (currentId) {
+        const url = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/queue?user_id=eq.${currentId}`;
+        navigator.sendBeacon(
+          url,
+          JSON.stringify({ user_id: currentId })
+        );
+      }
+    };
+
+    window.addEventListener("beforeunload", handleTabClose);
+
     return () => {
+      window.removeEventListener("beforeunload", handleTabClose);
       supabase.removeChannel(queueChannel);
       supabase.removeChannel(presenceChannelRef.current);
     };
