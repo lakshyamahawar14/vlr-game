@@ -59,14 +59,11 @@ export default function RoomPage() {
       const incomingMyTeam = isP1 ? data.p1_team || [] : data.p2_team || [];
       const incomingOppTeam = isP1 ? data.p2_team || [] : data.p1_team || [];
       
-      if (incomingMyTeam.length >= teamRef.current.length) {
-        setTeam(incomingMyTeam);
-        teamRef.current = incomingMyTeam;
-      }
-      
+      setTeam(incomingMyTeam);
+      teamRef.current = incomingMyTeam;
       setOppTeam(incomingOppTeam);
-      const currentCost = (incomingMyTeam.length >= teamRef.current.length ? incomingMyTeam : teamRef.current)
-        .reduce((acc: number, p: Player) => acc + p.cost, 0);
+      
+      const currentCost = incomingMyTeam.reduce((acc: number, p: Player) => acc + p.cost, 0);
       setBudget(100 - currentCost);
       setIsLoading(false);
     };
@@ -84,26 +81,20 @@ export default function RoomPage() {
     fetchInitial();
 
     const channel = supabase.channel(`room_sync_${roomId}`)
-      .on("postgres_changes", { event: "*", schema: "public", table: "room", filter: `id=eq.${roomId}` }, (payload) => {
-        if (payload.eventType === "DELETE") {
-          setRoomExists(false);
-        } else {
-          syncStates(payload.new);
-        }
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "room", filter: `id=eq.${roomId}` }, (payload) => {
+        syncStates(payload.new);
+      })
+      .on("postgres_changes", { event: "DELETE", schema: "public", table: "room", filter: `id=eq.${roomId}` }, () => {
+        setRoomExists(false);
       })
       .subscribe();
 
     const interval = setInterval(() => {
-      if (status !== "DRAFTING") {
-        clearInterval(interval);
-        return;
-      }
       setTimer((p) => {
+        if (status !== "DRAFTING") return p;
         if (p <= 1) {
           if (role === "p1") {
-            supabase.from("room").update({ status: "ENDED" }).eq("id", roomId).select().then(({ data }) => {
-              if (data?.[0]) syncStates(data[0]);
-            });
+            supabase.from("room").update({ status: "ENDED" }).eq("id", roomId).then();
           }
           return 0;
         }
@@ -122,6 +113,7 @@ export default function RoomPage() {
     if (teamRef.current.some(p => p.name === name)) return;
 
     const newTeam = [...teamRef.current, { name, cost }];
+    
     setTeam(newTeam);
     teamRef.current = newTeam;
     setBudget(prev => prev - cost);
