@@ -11,265 +11,165 @@ export default function Home() {
   const [isEditingName, setIsEditingName] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
   const [isQueuing, setIsQueuing] = useState(false);
-  const [queueList, setQueueList] = useState<{ user_id: string; user_name: string }[]>([]);
-  const [onlineUsers, setOnlineUsers] = useState<{ id: string; name: string; challenging?: string }[]>([]);
+  const [onlineUsers, setOnlineUsers] = useState<{ id: string; name: string; challenging?: string; isQueuing?: boolean }[]>([]);
   const [challengeStack, setChallengeStack] = useState<{ id: string; name: string }[]>([]);
   const [isWaitingForResponse, setIsWaitingForResponse] = useState<string | null>(null);
   const presenceChannelRef = useRef<any>(null);
 
-  const updatePresence = async (name: string, targetId: string | null = null) => {
+  const syncPresence = async (queuing: boolean, currentName: string, challengingId: string | null) => {
     if (presenceChannelRef.current) {
-      await presenceChannelRef.current.track({ name, challenging: targetId });
+      await presenceChannelRef.current.track({ 
+        name: currentName, 
+        challenging: challengingId, 
+        isQueuing: queuing 
+      });
     }
-  };
-
-  const removeFromQueue = async (userId: string) => {
-    await supabase.from("queue").delete().eq("user_id", userId);
   };
 
   useEffect(() => {
     setIsMounted(true);
-    let userId = localStorage.getItem("vlr_duel_id") || crypto.randomUUID();
+    const userId = localStorage.getItem("vlr_duel_id") || crypto.randomUUID();
     localStorage.setItem("vlr_duel_id", userId);
     setMyId(userId);
 
-    let storedName = localStorage.getItem("vlr_duel_username") || `Player_${userId.slice(0, 4)}`;
-    if (storedName.length > 12) storedName = storedName.slice(0, 12);
-    localStorage.setItem("vlr_duel_username", storedName);
+    const storedName = localStorage.getItem("vlr_duel_username") || `Player_${userId.slice(0, 4)}`;
     setUsername(storedName);
 
-    const fetchQueue = async () => {
-      const { data } = await supabase.from("queue").select("user_id, user_name").order("created_at", { ascending: true });
-      setQueueList(data || []);
-    };
-    fetchQueue();
-
-    const queueChannel = supabase.channel("live_queue_sync")
-      .on("postgres_changes", { event: "*", schema: "public", table: "queue" }, () => fetchQueue())
-      .subscribe();
-
-    presenceChannelRef.current = supabase.channel("online-users", {
-      config: { presence: { key: userId } }
+    presenceChannelRef.current = supabase.channel("global_lobby", {
+      config: { 
+        presence: { key: userId },
+        broadcast: { self: true } 
+      }
     });
 
-    const handlePresenceSync = () => {
+    const handleSync = () => {
       const state = presenceChannelRef.current.presenceState();
       const users = Object.keys(state).map((key) => ({
         id: key,
         name: (state[key][0] as any)?.name || "Unknown",
-        challenging: (state[key][0] as any)?.challenging
+        challenging: (state[key][0] as any)?.challenging,
+        isQueuing: (state[key][0] as any)?.isQueuing
       }));
-      setOnlineUsers(users);
-      const challengers = users.filter(u => u.challenging === userId);
-      setChallengeStack(challengers.map(c => ({ id: c.id, name: c.name })));
 
-      const onlineIds = new Set(users.map(u => u.id));
-      setQueueList(prev => {
-        const filtered = prev.filter(p => onlineIds.has(p.user_id));
-        prev.forEach(p => {
-          if (!onlineIds.has(p.user_id)) removeFromQueue(p.user_id);
-        });
-        return filtered;
-      });
+      setOnlineUsers(users);
+      const me = users.find(u => u.id === userId);
+      if (me) {
+        setIsQueuing(!!me.isQueuing);
+        setIsWaitingForResponse(me.challenging || null);
+      }
+      setChallengeStack(users.filter(u => u.challenging === userId).map(c => ({ id: c.id, name: c.name })));
     };
 
     presenceChannelRef.current
-      .on("presence", { event: "sync" }, handlePresenceSync)
-      .on("presence", { event: "join" }, handlePresenceSync)
-      .on("presence", { event: "leave" }, ({ leftPresences }: any) => {
-        leftPresences.forEach((p: any) => {
-          if (p.key) removeFromQueue(p.key);
-        });
-        handlePresenceSync();
-      })
+      .on("presence", { event: "sync" }, handleSync)
+      .on("presence", { event: "join" }, handleSync)
+      .on("presence", { event: "leave" }, handleSync)
       .on("broadcast", { event: "duel_declined" }, (payload: any) => {
         if (payload.payload.challengerId === userId) {
-          setIsWaitingForResponse(null);
-          updatePresence(localStorage.getItem("vlr_duel_username") || "Unknown", null);
+          syncPresence(isQueuing, username, null);
         }
       })
       .on("broadcast", { event: "duel_started" }, (payload: any) => {
         if (payload.payload.targetId === userId || payload.payload.challengerId === userId) {
-          setIsQueuing(false);
-          setIsWaitingForResponse(null);
           router.push(`/room/${payload.payload.roomId}`);
         }
       })
       .subscribe(async (status: string) => {
         if (status === "SUBSCRIBED") {
-          await updatePresence(storedName);
+          await syncPresence(false, storedName, null);
         }
       });
 
-    const handleTabClose = () => {
-      const currentId = localStorage.getItem("vlr_duel_id");
-      if (currentId) {
-        const url = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/queue?user_id=eq.${currentId}`;
-        navigator.sendBeacon(
-          url,
-          JSON.stringify({ user_id: currentId })
-        );
+    return () => { supabase.removeChannel(presenceChannelRef.current); };
+  }, [router, myId]);
+
+  useEffect(() => {
+    if (isQueuing) {
+      const otherQueuer = onlineUsers.find(u => u.isQueuing && u.id !== myId);
+      if (otherQueuer && myId < otherQueuer.id) {
+        const roomId = `queue_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+        supabase.from("room").insert([
+          { id: roomId, p1_id: myId, p2_id: otherQueuer.id, status: "DRAFTING", p1_name: username, p2_name: otherQueuer.name }
+        ]).then(({ error }) => {
+          if (!error) {
+            presenceChannelRef.current.send({
+              type: "broadcast",
+              event: "duel_started",
+              payload: { roomId, challengerId: myId, targetId: otherQueuer.id },
+            });
+          }
+        });
       }
-    };
-
-    window.addEventListener("beforeunload", handleTabClose);
-
-    return () => {
-      window.removeEventListener("beforeunload", handleTabClose);
-      supabase.removeChannel(queueChannel);
-      supabase.removeChannel(presenceChannelRef.current);
-    };
-  }, [router]);
+    }
+  }, [isQueuing, onlineUsers, myId, username]);
 
   const sendDuelRequest = async (targetId: string) => {
-    setIsWaitingForResponse(targetId);
-    await updatePresence(username, targetId);
+    await syncPresence(isQueuing, username, targetId);
   };
 
   const cancelDuelRequest = async () => {
-    setIsWaitingForResponse(null);
-    await updatePresence(username, null);
+    await syncPresence(isQueuing, username, null);
   };
 
   const acceptDuel = async () => {
     if (challengeStack.length === 0) return;
-
     const challenger = challengeStack[0];
-    const roomId = [myId, challenger.id].sort().join("_");
-
-    setIsQueuing(false);
-    await supabase.from("queue").delete().in("user_id", [myId, challenger.id]);
-    await updatePresence(username, null);
-
-    const { error } = await supabase.from("room").upsert([
+    const roomId = `match_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+    
+    const { error } = await supabase.from("room").insert([
       { id: roomId, p1_id: challenger.id, p2_id: myId, status: "DRAFTING", p1_name: challenger.name, p2_name: username }
-    ], { onConflict: 'id' });
-
+    ]);
+    
     if (!error) {
-      setTimeout(async () => {
-        await presenceChannelRef.current.send({
-          type: "broadcast",
-          event: "duel_started",
-          payload: { roomId, challengerId: challenger.id, targetId: myId },
-        });
-        router.push(`/room/${roomId}`);
-      }, 150);
+      await presenceChannelRef.current.send({
+        type: "broadcast",
+        event: "duel_started",
+        payload: { roomId, challengerId: challenger.id, targetId: myId },
+      });
     }
   };
 
   const declineDuel = async () => {
     if (challengeStack.length === 0) return;
     const challengerId = challengeStack[0].id;
-    await presenceChannelRef.current.send({
-      type: "broadcast",
-      event: "duel_declined",
-      payload: { challengerId },
-    });
-    setChallengeStack(prev => prev.slice(1));
+    await presenceChannelRef.current.send({ type: "broadcast", event: "duel_declined", payload: { challengerId } });
   };
 
   const handleSaveName = async () => {
-    let cleanName = username.trim();
-    if (cleanName.length > 12) {
-      const original = localStorage.getItem("vlr_duel_username") || "Unknown";
-      setUsername(original);
-      setIsEditingName(false);
-      return;
-    }
-    
-    if (cleanName === "") cleanName = "Unknown";
-    
+    let cleanName = username.trim() || "Unknown";
+    if (cleanName.length > 12) cleanName = cleanName.slice(0, 12);
     setUsername(cleanName);
     localStorage.setItem("vlr_duel_username", cleanName);
     setIsEditingName(false);
-    
-    await updatePresence(cleanName, isWaitingForResponse);
-
-    if (isQueuing) {
-      await supabase.from("queue").upsert([{ user_id: myId, user_name: cleanName }], { onConflict: 'user_id' });
-    }
+    await syncPresence(isQueuing, cleanName, isWaitingForResponse);
   };
 
   const handleQueueAction = async () => {
-    if (isQueuing) {
-      setIsQueuing(false);
-      await supabase.from("queue").delete().eq("user_id", myId);
-      return;
-    }
-    
-    setIsQueuing(true);
-    const { data: queue } = await supabase.from("queue").select("user_id, user_name").order("created_at", { ascending: true }).limit(1);
-    
-    if (queue && queue.length > 0 && queue[0].user_id !== myId) {
-      const oppId = queue[0].user_id;
-      const oppName = queue[0].user_name;
-      const roomId = [myId, oppId].sort().join("_");
-      
-      setIsQueuing(false);
-      await supabase.from("queue").delete().in("user_id", [myId, oppId]);
-
-      const { error } = await supabase.from("room").upsert([
-        { id: roomId, p1_id: myId, p2_id: oppId, status: "DRAFTING", p1_name: username, p2_name: oppName }
-      ], { onConflict: 'id' });
-      
-      if (!error) {
-        setTimeout(async () => {
-          await presenceChannelRef.current.send({
-            type: "broadcast",
-            event: "duel_started",
-            payload: { roomId, challengerId: myId, targetId: oppId },
-          });
-          router.push(`/room/${roomId}`);
-        }, 150);
-      }
-    } else {
-      await supabase.from("queue").upsert([{ user_id: myId, user_name: username }], { onConflict: 'user_id' });
-    }
+    await syncPresence(!isQueuing, username, isWaitingForResponse);
   };
 
-  useEffect(() => {
-    if (!myId) return;
-    const roomChannel = supabase.channel(`lobby_${myId}`)
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "room" }, (payload) => {
-        if (payload.new.p1_id === myId || payload.new.p2_id === myId) {
-          setIsQueuing(false);
-          setIsWaitingForResponse(null);
-          router.push(`/room/${payload.new.id}`);
-        }
-      })
-      .subscribe();
-    return () => { supabase.removeChannel(roomChannel); };
-  }, [myId, router]);
-
   if (!isMounted) return <div className="min-h-screen bg-white" />;
+
+  const queueMembers = onlineUsers.filter(u => u.isQueuing);
 
   return (
     <div className="flex flex-col lg:flex-row min-h-screen bg-white text-black font-mono">
       <div className="w-full lg:w-80 border-b-4 lg:border-b-0 lg:border-r-4 border-black p-6 flex flex-col bg-gray-50">
         <h2 className="text-xl font-black uppercase mb-6 border-b-2 border-black pb-1 italic">DRAFT PROTOCOL</h2>
         <ul className="space-y-6">
-          <li className="flex gap-4"><span className="font-black text-xl">01</span><div><p className="text-[11px] font-black uppercase text-red-500 mb-0.5">Financials</p><p className="text-[13px] font-black uppercase leading-tight text-gray-700">You are granted a $100 budget. Every pick deducts from this total.</p></div></li>
-          <li className="flex gap-4"><span className="font-black text-xl">02</span><div><p className="text-[11px] font-black uppercase text-red-500 mb-0.5">Roster</p><p className="text-[13px] font-black uppercase leading-tight text-gray-700">You must draft exactly 5 pro players. Incomplete rosters will still be tallied.</p></div></li>
-          <li className="flex gap-4"><span className="font-black text-xl">03</span><div><p className="text-[11px] font-black uppercase text-red-500 mb-0.5">Simultaneity</p><p className="text-[13px] font-black uppercase leading-tight text-gray-700">Both managers pick from the same pool. Speed secures assets first.</p></div></li>
-          <li className="flex gap-4"><span className="font-black text-xl">04</span><div><p className="text-[11px] font-black uppercase text-red-500 mb-0.5">The Clock</p><p className="text-[13px] font-black uppercase leading-tight text-gray-700">A strict 30-second window is enforced. If the timer hits zero, draft ends.</p></div></li>
-          <li className="flex gap-4"><span className="font-black text-xl">05</span><div><p className="text-[11px] font-black uppercase text-red-500 mb-0.5">Objective</p><p className="text-[13px] font-black uppercase leading-tight text-gray-700">The manager with the highest combined roster value claims victory.</p></div></li>
+          <li className="flex gap-4"><span className="font-black text-xl">01</span><div><p className="text-[11px] font-black uppercase text-red-500 mb-0.5">Financials</p><p className="text-[13px] font-black uppercase leading-tight text-gray-700">You are granted a $100 budget.</p></div></li>
+          <li className="flex gap-4"><span className="font-black text-xl">02</span><div><p className="text-[11px] font-black uppercase text-red-500 mb-0.5">Roster</p><p className="text-[13px] font-black uppercase leading-tight text-gray-700">Draft exactly 5 players.</p></div></li>
+          <li className="flex gap-4"><span className="font-black text-xl">03</span><div><p className="text-[11px] font-black uppercase text-red-500 mb-0.5">Simultaneity</p><p className="text-[13px] font-black uppercase leading-tight text-gray-700">Speed secures assets first.</p></div></li>
+          <li className="flex gap-4"><span className="font-black text-xl">04</span><div><p className="text-[11px] font-black uppercase text-red-500 mb-0.5">The Clock</p><p className="text-[13px] font-black uppercase leading-tight text-gray-700">30-second window enforced.</p></div></li>
+          <li className="flex gap-4"><span className="font-black text-xl">05</span><div><p className="text-[11px] font-black uppercase text-red-500 mb-0.5">Objective</p><p className="text-[13px] font-black uppercase leading-tight text-gray-700">Highest combined value wins.</p></div></li>
         </ul>
       </div>
-
       <div className="flex-1 flex flex-col items-center justify-center p-8 bg-white">
         <div className="mb-8 flex flex-col items-center gap-2">
           <p className="text-xs font-black uppercase text-gray-400 tracking-widest">Your Username</p>
           <div className="flex items-center gap-3 border-b-2 border-black pb-2">
             {isEditingName ? (
-              <input 
-                value={username} 
-                onChange={(e) => setUsername(e.target.value)} 
-                onBlur={handleSaveName} 
-                onKeyDown={(e) => e.key === "Enter" && handleSaveName()} 
-                autoFocus 
-                maxLength={13}
-                className={`text-2xl font-black uppercase outline-none w-48 ${username.length > 12 ? 'bg-red-50 text-red-600' : 'bg-yellow-50'}`} 
-              />
+              <input value={username} onChange={(e) => setUsername(e.target.value)} onBlur={handleSaveName} onKeyDown={(e) => e.key === "Enter" && handleSaveName()} autoFocus maxLength={12} className="text-2xl font-black uppercase outline-none w-48 bg-yellow-50" />
             ) : (
               <span className="text-2xl font-black uppercase italic">{username}</span>
             )}
@@ -277,9 +177,7 @@ export default function Home() {
               {isEditingName ? "CONFIRM" : "RENAME"}
             </button>
           </div>
-          <p className={`text-[10px] font-black uppercase transition-colors ${username.length > 12 ? 'text-red-500' : 'text-gray-300'}`}>
-            {username.length > 12 ? "Username can't exceed 12 characters" : `UID: ${myId.slice(0, 8)}`}
-          </p>
+          <p className="text-[10px] font-black uppercase text-gray-300">{`UID: ${myId.slice(0, 8)}`}</p>
         </div>
         <h1 className="text-6xl md:text-8xl font-black uppercase tracking-tighter mb-1 italic text-center">VLR DUEL</h1>
         <p className="mb-12 text-gray-400 font-bold tracking-[0.4em] uppercase text-center text-[10px]">High-Stakes Tactical Drafting</p>
@@ -287,7 +185,6 @@ export default function Home() {
           {isQueuing ? "ABORT" : "FIND MATCH"}
         </button>
       </div>
-
       <div className="w-full lg:w-80 border-t-4 lg:border-t-0 lg:border-l-4 border-black bg-gray-50 flex flex-col overflow-hidden relative">
         {challengeStack.length > 0 && (
           <div className="absolute inset-0 z-50 bg-black text-white p-6 flex flex-col justify-center items-center text-center">
@@ -299,7 +196,6 @@ export default function Home() {
             </div>
           </div>
         )}
-
         <div className="p-6 flex-1 flex flex-col min-h-0">
           <div className="flex justify-between items-center mb-4 border-b-2 border-black pb-1">
             <h2 className="text-xl font-black uppercase italic">ONLINE PLAYERS</h2>
@@ -313,10 +209,7 @@ export default function Home() {
                   {user.id === myId ? (
                      <span className="text-[9px] bg-black text-white px-1 font-black tracking-tighter">YOU</span>
                   ) : (
-                    <button 
-                      onClick={() => isWaitingForResponse === user.id ? cancelDuelRequest() : sendDuelRequest(user.id)}
-                      className={`text-[10px] px-2 py-0.5 font-black uppercase border-2 border-black transition-all ${isWaitingForResponse === user.id ? 'bg-black text-white animate-pulse' : 'bg-white text-black'}`}
-                    >
+                    <button onClick={() => isWaitingForResponse === user.id ? cancelDuelRequest() : sendDuelRequest(user.id)} className={`text-[10px] px-2 py-0.5 font-black uppercase border-2 border-black transition-all ${isWaitingForResponse === user.id ? 'bg-black text-white animate-pulse' : 'bg-white text-black'}`}>
                       {isWaitingForResponse === user.id ? "WAITING" : "DUEL"}
                     </button>
                   )}
@@ -326,25 +219,24 @@ export default function Home() {
             ))}
           </div>
         </div>
-
         <div className="p-6 border-t-4 border-black bg-white flex-1 flex flex-col min-h-0">
           <div className="flex justify-between items-center mb-4 border-b-2 border-black pb-1">
             <h2 className="text-xl font-black uppercase italic">LIVE QUEUE</h2>
-            <div className="font-black text-sm text-green-600">{queueList.length}</div>
+            <div className="font-black text-sm text-green-600">{queueMembers.length}</div>
           </div>
           <div className="flex-1 overflow-y-auto space-y-3 scrollbar-hide pr-1">
-            {queueList.length === 0 ? (
+            {queueMembers.length === 0 ? (
               <div className="border-2 border-dashed border-gray-300 p-4 text-center">
                 <p className="text-[10px] font-black text-gray-400 uppercase">Awaiting Players...</p>
               </div>
             ) : (
-              queueList.map((player) => (
-                <div key={player.user_id} className={`p-4 border-2 border-black ${player.user_id === myId ? "bg-yellow-300" : "bg-white"}`}>
+              queueMembers.map((player) => (
+                <div key={player.id} className={`p-4 border-2 border-black ${player.id === myId ? "bg-yellow-300" : "bg-white"}`}>
                   <div className="flex justify-between items-start mb-1">
-                    <span className="text-sm font-black uppercase italic truncate">{player.user_name}</span>
-                    {player.user_id === myId && <span className="text-[9px] bg-black text-white px-1 font-black tracking-tighter">YOU</span>}
+                    <span className="text-sm font-black uppercase italic truncate">{player.name}</span>
+                    {player.id === myId && <span className="text-[9px] bg-black text-white px-1 font-black tracking-tighter">YOU</span>}
                   </div>
-                  <p className="text-[10px] font-bold text-gray-400 uppercase">ID: {player.user_id.slice(0, 8)}</p>
+                  <p className="text-[10px] font-bold text-gray-400 uppercase">ID: {player.id.slice(0, 8)}</p>
                 </div>
               ))
             )}
