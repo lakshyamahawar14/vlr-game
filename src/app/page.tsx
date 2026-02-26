@@ -70,6 +70,12 @@ export default function Home() {
           updatePresence(localStorage.getItem("vlr_duel_username") || "Unknown", null);
         }
       })
+      .on("broadcast", { event: "duel_started" }, (payload: any) => {
+        if (payload.payload.targetId === userId || payload.payload.challengerId === userId) {
+          setIsQueuing(false);
+          router.push(`/room/${payload.payload.roomId}`);
+        }
+      })
       .subscribe(async (status: string) => {
         if (status === "SUBSCRIBED") {
           await updatePresence(storedName);
@@ -94,12 +100,27 @@ export default function Home() {
 
   const acceptDuel = async () => {
     if (challengeStack.length === 0) return;
+
     const challenger = challengeStack[0];
     const roomId = [myId, challenger.id].sort().join("_");
+
+    setIsQueuing(false);
+    await supabase.from("queue").delete().in("user_id", [myId, challenger.id]);
+
     const { error } = await supabase.from("room").upsert([
-      { id: roomId, p1_id: challenger.id, p2_id: myId, status: "DRAFTING", p2_name: username }
+      { id: roomId, p1_id: challenger.id, p2_id: myId, status: "DRAFTING", p2_name: username, p1_name: challenger.name }
     ], { onConflict: 'id' });
-    if (!error) router.push(`/room/${roomId}`);
+
+    if (!error) {
+      setTimeout(async () => {
+        await presenceChannelRef.current.send({
+          type: "broadcast",
+          event: "duel_started",
+          payload: { roomId, challengerId: challenger.id, targetId: myId },
+        });
+        router.push(`/room/${roomId}`);
+      }, 150);
+    }
   };
 
   const declineDuel = async () => {
@@ -142,14 +163,29 @@ export default function Home() {
       return;
     }
     setIsQueuing(true);
-    const { data: queue } = await supabase.from("queue").select("user_id").order("created_at", { ascending: true }).limit(1);
+    const { data: queue } = await supabase.from("queue").select("user_id, user_name").order("created_at", { ascending: true }).limit(1);
+    
     if (queue && queue.length > 0 && queue[0].user_id !== myId) {
       const oppId = queue[0].user_id;
+      const oppName = queue[0].user_name;
       const roomId = [myId, oppId].sort().join("_");
-      const { error } = await supabase.from("room").upsert([{ id: roomId, p1_id: myId, p2_id: oppId, status: "DRAFTING", p1_name: username }], { onConflict: 'id' });
+      
+      setIsQueuing(false);
+      await supabase.from("queue").delete().in("user_id", [myId, oppId]);
+
+      const { error } = await supabase.from("room").upsert([
+        { id: roomId, p1_id: myId, p2_id: oppId, status: "DRAFTING", p1_name: username, p2_name: oppName }
+      ], { onConflict: 'id' });
+      
       if (!error) {
-        await supabase.from("queue").delete().in("user_id", [myId, oppId]);
-        router.push(`/room/${roomId}`);
+        setTimeout(async () => {
+          await presenceChannelRef.current.send({
+            type: "broadcast",
+            event: "duel_started",
+            payload: { roomId, challengerId: myId, targetId: oppId },
+          });
+          router.push(`/room/${roomId}`);
+        }, 150);
       }
     } else {
       await supabase.from("queue").upsert([{ user_id: myId, user_name: username }], { onConflict: 'user_id' });
@@ -160,7 +196,10 @@ export default function Home() {
     if (!myId) return;
     const roomChannel = supabase.channel(`lobby_${myId}`)
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "room" }, (payload) => {
-        if (payload.new.p1_id === myId || payload.new.p2_id === myId) router.push(`/room/${payload.new.id}`);
+        if (payload.new.p1_id === myId || payload.new.p2_id === myId) {
+          setIsQueuing(false);
+          router.push(`/room/${payload.new.id}`);
+        }
       })
       .subscribe();
     return () => { supabase.removeChannel(roomChannel); };
