@@ -73,6 +73,7 @@ export default function Home() {
       .on("broadcast", { event: "duel_started" }, (payload: any) => {
         if (payload.payload.targetId === userId || payload.payload.challengerId === userId) {
           setIsQueuing(false);
+          setIsWaitingForResponse(null);
           router.push(`/room/${payload.payload.roomId}`);
         }
       })
@@ -86,7 +87,7 @@ export default function Home() {
       supabase.removeChannel(queueChannel);
       supabase.removeChannel(presenceChannelRef.current);
     };
-  }, []);
+  }, [router]);
 
   const sendDuelRequest = async (targetId: string) => {
     setIsWaitingForResponse(targetId);
@@ -106,9 +107,10 @@ export default function Home() {
 
     setIsQueuing(false);
     await supabase.from("queue").delete().in("user_id", [myId, challenger.id]);
+    await updatePresence(username, null);
 
     const { error } = await supabase.from("room").upsert([
-      { id: roomId, p1_id: challenger.id, p2_id: myId, status: "DRAFTING", p2_name: username, p1_name: challenger.name }
+      { id: roomId, p1_id: challenger.id, p2_id: myId, status: "DRAFTING", p1_name: challenger.name, p2_name: username }
     ], { onConflict: 'id' });
 
     if (!error) {
@@ -162,6 +164,7 @@ export default function Home() {
       await supabase.from("queue").delete().eq("user_id", myId);
       return;
     }
+    
     setIsQueuing(true);
     const { data: queue } = await supabase.from("queue").select("user_id, user_name").order("created_at", { ascending: true }).limit(1);
     
@@ -198,6 +201,7 @@ export default function Home() {
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "room" }, (payload) => {
         if (payload.new.p1_id === myId || payload.new.p2_id === myId) {
           setIsQueuing(false);
+          setIsWaitingForResponse(null);
           router.push(`/room/${payload.new.id}`);
         }
       })
