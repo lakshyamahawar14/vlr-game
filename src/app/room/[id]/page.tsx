@@ -31,6 +31,7 @@ export default function RoomPage() {
   const [role, setRole] = useState<"p1" | "p2" | null>(null);
   
   const teamRef = useRef<Player[]>([]);
+  const statusRef = useRef<string | null>(null);
 
   useEffect(() => {
     setIsMounted(true);
@@ -47,6 +48,7 @@ export default function RoomPage() {
       const isP1 = data.p1_id === myId;
       setRole(isP1 ? "p1" : "p2");
       setStatus(data.status || "DRAFTING");
+      statusRef.current = data.status || "DRAFTING";
       
       if (isP1) {
         if (!data.p1_name) await supabase.from("room").update({ p1_name: myName }).eq("id", roomId);
@@ -65,6 +67,14 @@ export default function RoomPage() {
       
       const currentCost = incomingMyTeam.reduce((acc: number, p: Player) => acc + p.cost, 0);
       setBudget(100 - currentCost);
+
+      if (data.created_at && data.status === "DRAFTING") {
+        const startTime = new Date(data.created_at).getTime();
+        const now = Date.now();
+        const elapsed = Math.floor((now - startTime) / 1000);
+        setTimer(Math.max(0, 30 - elapsed));
+      }
+
       setIsLoading(false);
     };
 
@@ -91,7 +101,7 @@ export default function RoomPage() {
 
     const interval = setInterval(() => {
       setTimer((p) => {
-        if (status !== "DRAFTING") return p;
+        if (statusRef.current !== "DRAFTING") return p;
         if (p <= 1) {
           if (role === "p1") {
             supabase.from("room").update({ status: "ENDED" }).eq("id", roomId).then();
@@ -106,11 +116,12 @@ export default function RoomPage() {
       clearInterval(interval); 
       supabase.removeChannel(channel); 
     };
-  }, [isMounted, myId, params?.id, status, role, myName]);
+  }, [isMounted, myId, params?.id, role, myName]);
 
   const handlePick = async (name: string, cost: number) => {
     if (!params?.id || !role || status !== "DRAFTING" || teamRef.current.length >= 5 || budget < cost) return;
     if (teamRef.current.some(p => p.name === name)) return;
+    if (oppTeam.some(p => p.name === name)) return;
 
     const newTeam = [...teamRef.current, { name, cost }];
     
@@ -170,8 +181,8 @@ export default function RoomPage() {
 
       <div className="flex flex-col lg:grid lg:grid-cols-4 gap-6">
         <div className="lg:col-span-1 border-4 border-black p-4 bg-blue-50 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] order-2 lg:order-1">
-          <h2 className="text-xl md:text-2xl font-black uppercase mb-2 border-b-2 border-black italic pb-1 flex justify-between items-end">
-            <span className="truncate max-w-[120px]">{myName}</span>
+          <h2 className="text-xl md:text-2xl font-black uppercase mb-2 border-b-2 border-black italic pb-1 flex flex-col items-start">
+            <span className="whitespace-normal break-words w-full">{myName}</span>
             <span className="text-blue-600 text-lg md:text-xl italic">${myValue}</span>
           </h2>
           <div className="text-xs md:text-sm font-black uppercase text-black mb-3 tracking-tighter bg-yellow-300 inline-block px-2">Drafted: {team.length}/5</div>
@@ -194,17 +205,19 @@ export default function RoomPage() {
                     {players.map((p) => {
                       const costNum = parseInt(cost);
                       const isPicked = team.some(tp => tp.name === p);
+                      const isOpponentPicked = oppTeam.some(tp => tp.name === p);
                       const cannotAfford = budget < costNum;
                       return (
                         <button 
                           key={p} 
                           onClick={() => handlePick(p, costNum)} 
-                          disabled={cannotAfford || team.length >= 5 || isPicked}
+                          disabled={cannotAfford || team.length >= 5 || isPicked || isOpponentPicked}
                           className={`w-full text-left p-3 font-black text-sm border-2 uppercase transition-all 
                             ${isPicked ? 'bg-green-400 border-black cursor-default translate-x-1 translate-y-1' : 
+                              isOpponentPicked ? 'bg-red-400 border-black opacity-50 cursor-not-allowed' :
                               cannotAfford ? 'bg-gray-100 border-gray-300 text-gray-300 cursor-not-allowed' :
                               'bg-white border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-0.5 hover:translate-y-0.5'}`}>
-                          {p}
+                          {p} {isOpponentPicked && "(TAKEN)"}
                         </button>
                       );
                     })}
@@ -216,13 +229,13 @@ export default function RoomPage() {
             <div className="bg-black text-white p-6 md:p-10 text-center border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
               <h2 className="text-4xl md:text-6xl font-black italic mb-1 uppercase tracking-tighter underline decoration-yellow-400 decoration-4 underline-offset-4">Result</h2>
               <div className="flex flex-col md:flex-row justify-center items-center gap-6 md:gap-8 my-6 border-y border-white/20 py-6">
-                <div className="text-center">
-                  <p className="text-gray-400 font-black uppercase text-[10px] mb-1 truncate max-w-[100px]">{myName}</p>
+                <div className="text-center w-full md:w-1/3">
+                  <p className="text-gray-400 font-black uppercase text-[10px] mb-1 whitespace-normal break-words">{myName}</p>
                   <p className="text-4xl md:text-6xl font-black">${myValue}</p>
                 </div>
                 <div className="text-2xl md:text-4xl font-black text-gray-500 italic">VS</div>
-                <div className="text-center">
-                  <p className="text-gray-400 font-black uppercase text-[10px] mb-1 truncate max-w-[100px]">{oppName}</p>
+                <div className="text-center w-full md:w-1/3">
+                  <p className="text-gray-400 font-black uppercase text-[10px] mb-1 whitespace-normal break-words">{oppName}</p>
                   <p className="text-4xl md:text-6xl font-black">${oppValue}</p>
                 </div>
               </div>
@@ -235,8 +248,8 @@ export default function RoomPage() {
         </div>
 
         <div className="lg:col-span-1 border-4 border-black p-4 bg-red-50 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] order-3 lg:order-3">
-          <h2 className="text-xl md:text-2xl font-black uppercase mb-2 border-b-2 border-black italic pb-1 flex justify-between items-end">
-            <span className="truncate max-w-[120px]">{oppName}</span>
+          <h2 className="text-xl md:text-2xl font-black uppercase mb-2 border-b-2 border-black italic pb-1 flex flex-col items-end">
+            <span className="whitespace-normal break-words w-full text-right">{oppName}</span>
             <span className="text-red-600 text-lg md:text-xl italic">${oppValue}</span>
           </h2>
           <div className="text-xs md:text-sm font-black uppercase text-black mb-3 tracking-tighter text-right bg-red-200 inline-block w-full px-2">Drafted: {oppTeam.length}/5</div>
