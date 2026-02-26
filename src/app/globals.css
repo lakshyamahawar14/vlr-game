@@ -1,6 +1,7 @@
 @import "tailwindcss";
 
 :root {
+  /* Hardcoded light mode values */
   --background: #ffffff;
   --foreground: #171717;
 }
@@ -12,12 +13,7 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
+/* Removed the prefers-color-scheme media query to prevent dark mode */
 
 body {
   background: var(--background);
