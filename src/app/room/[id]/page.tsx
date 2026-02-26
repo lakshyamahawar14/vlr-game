@@ -20,6 +20,7 @@ export default function RoomPage() {
   const [myId, setMyId] = useState<string | null>(null);
   const [isMounted, setIsMounted] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [roomExists, setRoomExists] = useState(true);
   const [team, setTeam] = useState<Player[]>([]);
   const [oppTeam, setOppTeam] = useState<Player[]>([]);
   const [budget, setBudget] = useState(100);
@@ -51,8 +52,13 @@ export default function RoomPage() {
 
     const fetchInitial = async () => {
       const { data } = await supabase.from("room").select("*").eq("id", roomId).maybeSingle();
-      if (data) syncStates(data);
-      else setIsLoading(false);
+      if (data) {
+        setRoomExists(true);
+        syncStates(data);
+      } else {
+        setRoomExists(false);
+        setIsLoading(false);
+      }
     };
     fetchInitial();
 
@@ -100,6 +106,17 @@ export default function RoomPage() {
 
   if (!isMounted || isLoading) return <div className="min-h-screen bg-white flex items-center justify-center font-mono text-2xl font-black animate-pulse uppercase italic">Initializing Arena...</div>;
 
+  if (!roomExists) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center p-4 font-mono">
+        <div className="bg-black text-white p-8 md:p-16 text-center border-4 border-black shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] max-w-2xl w-full">
+          <h2 className="text-4xl md:text-7xl font-black italic mb-8 uppercase tracking-tighter underline decoration-red-500 decoration-8 underline-offset-8">Room Not Found</h2>
+          <button onClick={() => router.push("/")} className="w-full md:w-auto bg-white text-black px-12 py-4 font-black uppercase text-xl hover:bg-yellow-400 transition-colors border-4 border-white">Back to Lobby</button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-white p-4 max-w-7xl mx-auto font-mono text-black">
       <style>{`
@@ -110,51 +127,51 @@ export default function RoomPage() {
         .animate-strobe-fast { animation: strobe-bg 1s steps(1) infinite; }
       `}</style>
 
-      <div className="grid grid-cols-3 border-4 border-black p-6 mb-8 bg-white shadow-[10px_10px_0px_0px_rgba(0,0,0,1)] items-center">
-        <div className="text-left">
-          <p className="text-xs font-black text-gray-400 uppercase italic tracking-widest">Budget</p>
-          <p className="text-6xl font-black">${budget}</p>
+      <div className="flex flex-col md:grid md:grid-cols-3 border-4 border-black p-4 md:p-6 mb-8 bg-white shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] md:shadow-[10px_10px_0px_0px_rgba(0,0,0,1)] items-center gap-6">
+        <div className="text-center md:text-left w-full">
+          <p className="text-sm font-black text-gray-400 uppercase italic tracking-widest">Budget</p>
+          <p className="text-5xl md:text-6xl lg:text-7xl font-black">${budget}</p>
         </div>
-        <div className="flex justify-center">
-          <div className={`text-7xl font-black italic px-12 py-4 border-[6px] border-black transition-all flex items-center justify-center min-w-[220px]
+        <div className="flex justify-center w-full">
+          <div className={`text-4xl md:text-5xl lg:text-7xl font-black italic px-8 py-3 md:px-12 md:py-4 border-[6px] border-black transition-all flex items-center justify-center w-full md:w-auto min-w-[200px]
             ${status === "DRAFTING" && timer <= 10 ? 'animate-strobe-fast' : 'bg-black text-white'}`}>
             {status === "DRAFTING" ? `${timer}S` : "FINISHED"}
           </div>
         </div>
-        <div className="text-right">
-          <p className="text-xs font-black text-gray-400 uppercase italic tracking-widest">Global Status</p>
-          <p className="text-4xl font-black uppercase italic">{status}</p>
+        <div className="text-center md:text-right w-full">
+          <p className="text-sm font-black text-gray-400 uppercase italic tracking-widest">Global Status</p>
+          <p className="text-3xl md:text-4xl lg:text-5xl font-black uppercase italic">{status}</p>
         </div>
       </div>
 
-      <div className="grid grid-cols-4 gap-8">
-        <div className="col-span-1 border-4 border-black p-5 bg-blue-50 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]">
-          <h2 className="text-2xl font-black uppercase mb-2 border-b-4 border-black italic pb-2 flex justify-between items-end">
+      <div className="flex flex-col lg:grid lg:grid-cols-4 gap-8">
+        <div className="lg:col-span-1 border-4 border-black p-5 bg-blue-50 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] order-2 lg:order-1">
+          <h2 className="text-2xl md:text-3xl font-black uppercase mb-2 border-b-4 border-black italic pb-2 flex justify-between items-end">
             <span>You</span>
-            <span className="text-blue-600 text-sm italic">${myValue}</span>
+            <span className="text-blue-600 text-lg md:text-2xl italic">${myValue}</span>
           </h2>
-          <div className="text-[10px] font-black uppercase text-gray-400 mb-4 tracking-tighter">Selection: {team.length}/5</div>
+          <div className="text-sm md:text-lg font-black uppercase text-black mb-4 tracking-tighter">Players Selected: {team.length}/5</div>
           <div className="space-y-3">
             {[...Array(5)].map((_, i) => (
-              <div key={i} className={`h-12 border-2 flex items-center justify-between px-3 font-black text-sm uppercase italic transition-all ${team[i] ? "bg-white border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]" : "bg-transparent border-dashed border-gray-300 text-gray-300"}`}>
+              <div key={i} className={`h-14 border-2 flex items-center justify-between px-3 font-black text-base md:text-lg uppercase italic transition-all ${team[i] ? "bg-white border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]" : "bg-transparent border-dashed border-gray-300 text-gray-300"}`}>
                 {team[i] ? <><span className="truncate">{team[i].name}</span><span>${team[i].cost}</span></> : <span>Slot {i+1}</span>}
               </div>
             ))}
           </div>
         </div>
 
-        <div className="col-span-2">
+        <div className="lg:col-span-2 order-1 lg:order-2">
           {status === "DRAFTING" ? (
-            <div className={`grid grid-cols-2 gap-5 transition-opacity duration-300 ${team.length >= 5 ? 'opacity-40 grayscale pointer-events-none' : 'opacity-100'}`}>
+            <div className={`grid grid-cols-1 md:grid-cols-2 gap-4 transition-opacity duration-300 ${team.length >= 5 ? 'opacity-40 grayscale pointer-events-none' : 'opacity-100'}`}>
               {Object.entries(CATEGORIES).sort((a, b) => Number(b[0]) - Number(a[0])).map(([cost, players]) => (
                 <div key={cost} className="border-4 border-black p-3 bg-white">
-                  <div className="bg-black text-white text-center mb-4 font-black italic uppercase py-1 text-lg">${cost}</div>
+                  <div className="bg-black text-white text-center mb-4 font-black italic uppercase py-2 text-xl md:text-2xl">${cost}</div>
                   <div className="space-y-2">
                     {players.map((p) => {
                       const isPicked = team.some(tp => tp.name === p);
                       return (
                         <button key={p} onClick={() => handlePick(p, parseInt(cost))} disabled={budget < parseInt(cost) || team.length >= 5 || isPicked}
-                          className={`w-full text-left p-3 font-black text-xs border-2 uppercase transition-all ${isPicked ? 'bg-green-400 border-black cursor-default' : 'bg-white border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-1 hover:translate-y-1'}`}>{p}</button>
+                          className={`w-full text-left p-4 font-black text-sm md:text-base border-2 uppercase transition-all ${isPicked ? 'bg-green-400 border-black cursor-default' : 'bg-white border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-1 hover:translate-y-1'}`}>{p}</button>
                       );
                     })}
                   </div>
@@ -162,29 +179,29 @@ export default function RoomPage() {
               ))}
             </div>
           ) : (
-            <div className="bg-black text-white p-16 text-center border-4 border-black shadow-[12px_12px_0px_0px_rgba(0,0,0,1)]">
-              <h2 className="text-7xl font-black italic mb-2 uppercase tracking-tighter underline decoration-yellow-400 decoration-8 underline-offset-8">Draft Result</h2>
-              <div className="flex justify-center gap-12 my-10 border-y border-white/20 py-8">
-                <div><p className="text-gray-400 font-bold uppercase text-xs mb-1">Your Score</p><p className="text-6xl font-black">${myValue}</p></div>
-                <div className="text-5xl font-black self-center text-gray-500 italic">VS</div>
-                <div><p className="text-gray-400 font-bold uppercase text-xs mb-1">Enemy Score</p><p className="text-6xl font-black">${oppValue}</p></div>
+            <div className="bg-black text-white p-8 md:p-16 text-center border-4 border-black shadow-[12px_12px_0px_0px_rgba(0,0,0,1)]">
+              <h2 className="text-5xl md:text-7xl font-black italic mb-2 uppercase tracking-tighter underline decoration-yellow-400 decoration-8 underline-offset-8">Result</h2>
+              <div className="flex flex-col md:flex-row justify-center items-center gap-8 md:gap-12 my-10 border-y border-white/20 py-8">
+                <div><p className="text-gray-400 font-black uppercase text-sm mb-1">Your Score</p><p className="text-5xl md:text-7xl font-black">${myValue}</p></div>
+                <div className="text-3xl md:text-5xl font-black text-gray-500 italic">VS</div>
+                <div><p className="text-gray-400 font-black uppercase text-sm mb-1">Enemy Score</p><p className="text-5xl md:text-7xl font-black">${oppValue}</p></div>
               </div>
-              <div className="text-5xl font-black mb-10 uppercase italic tracking-widest">{myValue > oppValue ? "Victory" : myValue < oppValue ? "Defeat" : "Draw"}</div>
-              <button onClick={() => router.push("/")} className="bg-white text-black px-12 py-4 font-black uppercase text-xl hover:bg-yellow-400 transition-colors border-4 border-white">Lobby</button>
+              <div className="text-4xl md:text-6xl font-black mb-10 uppercase italic tracking-widest">{myValue > oppValue ? "Victory" : myValue < oppValue ? "Defeat" : "Draw"}</div>
+              <button onClick={() => router.push("/")} className="w-full md:w-auto bg-white text-black px-12 py-4 font-black uppercase text-xl hover:bg-yellow-400 transition-colors border-4 border-white">Lobby</button>
             </div>
           )}
         </div>
 
-        <div className="col-span-1 border-4 border-black p-5 bg-red-50 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]">
-          <h2 className="text-2xl font-black uppercase mb-2 border-b-4 border-black italic pb-2 flex justify-between items-end">
+        <div className="lg:col-span-1 border-4 border-black p-5 bg-red-50 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] order-3 lg:order-3">
+          <h2 className="text-2xl md:text-3xl font-black uppercase mb-2 border-b-4 border-black italic pb-2 flex justify-between items-end">
             <span>Enemy</span>
-            <span className="text-red-600 text-sm italic">${oppValue}</span>
+            <span className="text-red-600 text-lg md:text-2xl italic">${oppValue}</span>
           </h2>
-          <div className="text-[10px] font-black uppercase text-gray-400 mb-4 tracking-tighter text-right">Selection: {oppTeam.length}/5</div>
+          <div className="text-sm md:text-lg font-black uppercase text-black mb-4 tracking-tighter text-right">Players Selected: {oppTeam.length}/5</div>
           <div className="space-y-3">
             {[...Array(5)].map((_, i) => (
-              <div key={i} className={`h-12 border-2 flex items-center justify-between px-3 font-black text-sm uppercase italic transition-all ${oppTeam[i] ? "bg-white border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]" : "bg-transparent border-dashed border-gray-300 text-gray-300"}`}>
-                {oppTeam[i] ? <><span className="truncate">{oppTeam[i].name}</span><span>${oppTeam[i].cost}</span></> : <span>Waiting...</span>}
+              <div key={i} className={`h-14 border-2 flex items-center justify-between px-3 font-black text-base md:text-lg uppercase italic transition-all ${oppTeam[i] ? "bg-white border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]" : "bg-transparent border-dashed border-gray-300 text-gray-300"}`}>
+                {oppTeam[i] ? <><span className="truncate">{oppTeam[i].name}</span><span>${oppTeam[i].cost}</span></> : <span>Slot {i+1}</span>}
               </div>
             ))}
           </div>

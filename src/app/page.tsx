@@ -90,41 +90,38 @@ export default function Home() {
   if (!isMounted) return <div className="min-h-screen bg-white" />;
 
   return (
-    <div className="flex min-h-screen bg-white text-black font-mono">
-      <div className="flex-1 flex flex-col items-center justify-center p-10">
-        <h1 className="text-8xl font-black uppercase tracking-tighter mb-2 italic">VLR DUEL</h1>
-        <p className="mb-12 text-gray-500 font-bold tracking-widest uppercase">The Ultimate Pro-Draft Experience</p>
+    <div className="flex flex-col lg:flex-row min-h-screen bg-white text-black font-mono">
+      <div className="flex-1 flex flex-col items-center justify-center p-6 lg:p-10 order-2 lg:order-1">
+        <h1 className="text-5xl md:text-7xl lg:text-8xl font-black uppercase tracking-tighter mb-2 italic text-center">VLR DUEL</h1>
+        <p className="mb-8 lg:mb-12 text-gray-500 font-bold tracking-widest uppercase text-center text-xs md:text-sm">The Ultimate Pro-Draft Experience</p>
         <button
           onClick={handleQueueAction}
-          className={`w-64 py-6 text-2xl font-black uppercase transition-all border-4 border-black
+          className={`w-full max-w-xs md:max-w-sm py-6 text-xl md:text-2xl font-black uppercase transition-all border-4 border-black
             ${isQueuing ? "bg-black text-white shadow-[8px_8px_0px_0px_rgba(0,0,0,0.2)]" : "bg-white text-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] hover:shadow-none translate-x-[-4px] translate-y-[-4px] hover:translate-x-0 hover:translate-y-0"}`}
         >
           {isQueuing ? "CANCEL QUEUE" : "FIND MATCH"}
         </button>
-        <div className="mt-2 text-sm font-bold uppercase text-gray-600">
-          Players in Queue: {onlinePlayers === null ? "FETCHING..." : onlinePlayers}
+        <div className="mt-4 text-base md:text-lg font-black uppercase text-black">
+          Players in Queue: {onlinePlayers === null ? "..." : onlinePlayers}
         </div>
         {isQueuing && (
           <div className="mt-6 flex items-center gap-2">
-            <div className="w-2 h-2 bg-black rounded-full animate-bounce" />
-            <div className="w-2 h-2 bg-black rounded-full animate-bounce [animation-delay:0.2s]" />
-            <div className="w-2 h-2 bg-black rounded-full animate-bounce [animation-delay:0.4s]" />
-            <span className="ml-2 font-bold uppercase text-xs">Searching for opponent...</span>
+            <div className="w-3 h-3 bg-black rounded-full animate-bounce" />
+            <div className="w-3 h-3 bg-black rounded-full animate-bounce [animation-delay:0.2s]" />
+            <div className="w-3 h-3 bg-black rounded-full animate-bounce [animation-delay:0.4s]" />
+            <span className="ml-2 font-black uppercase text-sm md:text-base">Searching...</span>
           </div>
         )}
       </div>
-      <div className="w-80 border-l-4 border-black p-8 flex flex-col bg-gray-50">
-        <h2 className="text-2xl font-black uppercase mb-6 border-b-4 border-black pb-2">RULES</h2>
+      <div className="w-full lg:w-96 border-b-4 lg:border-b-0 lg:border-l-4 border-black p-6 lg:p-8 flex flex-col bg-gray-50 order-1 lg:order-2">
+        <h2 className="text-3xl font-black uppercase mb-6 border-b-4 border-black pb-2 italic">RULES</h2>
         <ul className="space-y-6">
-          <li className="flex gap-4"><span className="font-black text-xl">01</span><p className="text-sm font-bold uppercase leading-tight">Build your team with a $100 budget.</p></li>
-          <li className="flex gap-4"><span className="font-black text-xl">02</span><p className="text-sm font-bold uppercase leading-tight">Draft exactly 5 pro players to complete your roster.</p></li>
-          <li className="flex gap-4"><span className="font-black text-xl">03</span><p className="text-sm font-bold uppercase leading-tight">Players can be picked by both teams simultaneously.</p></li>
-          <li className="flex gap-4"><span className="font-black text-xl">04</span><p className="text-sm font-bold uppercase leading-tight">You have 30 seconds to finish your draft.</p></li>
-          <li className="flex gap-4"><span className="font-black text-xl">05</span><p className="text-sm font-bold uppercase leading-tight">The team with the highest total player value wins.</p></li>
+          <li className="flex gap-4"><span className="font-black text-2xl">01</span><p className="text-sm md:text-base font-black uppercase leading-tight">Build your team with a $100 budget.</p></li>
+          <li className="flex gap-4"><span className="font-black text-2xl">02</span><p className="text-sm md:text-base font-black uppercase leading-tight">Draft exactly 5 pro players to complete your roster.</p></li>
+          <li className="flex gap-4"><span className="font-black text-2xl">03</span><p className="text-sm md:text-base font-black uppercase leading-tight">Players can be picked by both teams simultaneously.</p></li>
+          <li className="flex gap-4"><span className="font-black text-2xl">04</span><p className="text-sm md:text-base font-black uppercase leading-tight">You have 30 seconds to finish your draft.</p></li>
+          <li className="flex gap-4"><span className="font-black text-2xl">05</span><p className="text-sm md:text-base font-black uppercase leading-tight">The team with the highest total player value wins.</p></li>
         </ul>
-        <div className="mt-auto pt-8 border-t-2 border-dashed border-black">
-          <p className="text-[10px] font-bold text-gray-400 uppercase italic">Version 1.0.0</p>
-        </div>
       </div>
     </div>
   );
