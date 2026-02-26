@@ -38,7 +38,7 @@ export default function RoomPage() {
     const roomId = params.id as string;
 
     const syncStates = (data: any) => {
-      if (data.id !== roomId) return;
+      if (!data) return;
       const isP1 = data.p1_id === myId;
       setRole(isP1 ? "p1" : "p2");
       setStatus(data.status || "DRAFTING");
@@ -51,20 +51,24 @@ export default function RoomPage() {
     };
 
     const fetchInitial = async () => {
-      const { data } = await supabase.from("room").select("*").eq("id", roomId).maybeSingle();
+      const { data, error } = await supabase.from("room").select("*").eq("id", roomId).maybeSingle();
       if (data) {
         setRoomExists(true);
         syncStates(data);
-      } else {
+      } else if (!error) {
         setRoomExists(false);
         setIsLoading(false);
       }
     };
     fetchInitial();
 
-    const channel = supabase.channel(`room_${roomId}`)
-      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "room" }, (payload) => {
-        syncStates(payload.new);
+    const channel = supabase.channel(`room_sync_${roomId}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "room", filter: `id=eq.${roomId}` }, (payload) => {
+        if (payload.eventType === "DELETE") {
+            setRoomExists(false);
+        } else {
+            syncStates(payload.new);
+        }
       })
       .subscribe();
 
@@ -130,7 +134,7 @@ export default function RoomPage() {
       <div className="flex flex-col md:grid md:grid-cols-3 border-4 border-black p-4 md:p-6 mb-8 bg-white shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] md:shadow-[10px_10px_0px_0px_rgba(0,0,0,1)] items-center gap-6">
         <div className="text-center md:text-left w-full">
           <p className="text-sm font-black text-gray-400 uppercase italic tracking-widest">Budget</p>
-          <p className="text-5xl md:text-6xl lg:text-7xl font-black">${budget}</p>
+          <p className="text-6xl md:text-7xl lg:text-8xl font-black">${budget}</p>
         </div>
         <div className="flex justify-center w-full">
           <div className={`text-4xl md:text-5xl lg:text-7xl font-black italic px-8 py-3 md:px-12 md:py-4 border-[6px] border-black transition-all flex items-center justify-center w-full md:w-auto min-w-[200px]
@@ -150,10 +154,10 @@ export default function RoomPage() {
             <span>You</span>
             <span className="text-blue-600 text-lg md:text-2xl italic">${myValue}</span>
           </h2>
-          <div className="text-sm md:text-lg font-black uppercase text-black mb-4 tracking-tighter">Players Selected: {team.length}/5</div>
+          <div className="text-base md:text-xl font-black uppercase text-black mb-4 tracking-tighter bg-yellow-300 inline-block px-2">Players Selected: {team.length}/5</div>
           <div className="space-y-3">
             {[...Array(5)].map((_, i) => (
-              <div key={i} className={`h-14 border-2 flex items-center justify-between px-3 font-black text-base md:text-lg uppercase italic transition-all ${team[i] ? "bg-white border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]" : "bg-transparent border-dashed border-gray-300 text-gray-300"}`}>
+              <div key={i} className={`h-16 border-2 flex items-center justify-between px-3 font-black text-lg md:text-xl uppercase italic transition-all ${team[i] ? "bg-white border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]" : "bg-transparent border-dashed border-gray-300 text-gray-300"}`}>
                 {team[i] ? <><span className="truncate">{team[i].name}</span><span>${team[i].cost}</span></> : <span>Slot {i+1}</span>}
               </div>
             ))}
@@ -165,13 +169,13 @@ export default function RoomPage() {
             <div className={`grid grid-cols-1 md:grid-cols-2 gap-4 transition-opacity duration-300 ${team.length >= 5 ? 'opacity-40 grayscale pointer-events-none' : 'opacity-100'}`}>
               {Object.entries(CATEGORIES).sort((a, b) => Number(b[0]) - Number(a[0])).map(([cost, players]) => (
                 <div key={cost} className="border-4 border-black p-3 bg-white">
-                  <div className="bg-black text-white text-center mb-4 font-black italic uppercase py-2 text-xl md:text-2xl">${cost}</div>
+                  <div className="bg-black text-white text-center mb-4 font-black italic uppercase py-2 text-xl md:text-3xl">${cost}</div>
                   <div className="space-y-2">
                     {players.map((p) => {
                       const isPicked = team.some(tp => tp.name === p);
                       return (
                         <button key={p} onClick={() => handlePick(p, parseInt(cost))} disabled={budget < parseInt(cost) || team.length >= 5 || isPicked}
-                          className={`w-full text-left p-4 font-black text-sm md:text-base border-2 uppercase transition-all ${isPicked ? 'bg-green-400 border-black cursor-default' : 'bg-white border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-1 hover:translate-y-1'}`}>{p}</button>
+                          className={`w-full text-left p-4 font-black text-base md:text-lg border-2 uppercase transition-all ${isPicked ? 'bg-green-400 border-black cursor-default' : 'bg-white border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-1 hover:translate-y-1'}`}>{p}</button>
                       );
                     })}
                   </div>
@@ -197,7 +201,7 @@ export default function RoomPage() {
             <span>Enemy</span>
             <span className="text-red-600 text-lg md:text-2xl italic">${oppValue}</span>
           </h2>
-          <div className="text-sm md:text-lg font-black uppercase text-black mb-4 tracking-tighter text-right">Players Selected: {oppTeam.length}/5</div>
+          <div className="text-sm md:text-xl font-black uppercase text-black mb-4 tracking-tighter text-right bg-red-200 inline-block w-full px-2">Players Selected: {oppTeam.length}/5</div>
           <div className="space-y-3">
             {[...Array(5)].map((_, i) => (
               <div key={i} className={`h-14 border-2 flex items-center justify-between px-3 font-black text-base md:text-lg uppercase italic transition-all ${oppTeam[i] ? "bg-white border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]" : "bg-transparent border-dashed border-gray-300 text-gray-300"}`}>
