@@ -28,7 +28,7 @@ export default function ProtocolList() {
     },
     { 
       id: "07", 
-      rule: "Sometimes the website might not function as expected because of internal issues. Just Reload the website and queue in another match."
+      rule: "If you gets stuck while joining a match, or data is not visible, just Reload the website or queue in another match."
     },
   ];
 

@@ -59,18 +59,23 @@ export function useRoom() {
       setOppName(isP1 ? (data.p2_name || "WAITING...") : (data.p1_name || "WAITING..."));
       statusRef.current = data.status;
       setStatus(data.status);
-      if (data.categories && Object.keys(data.categories).length > 0) {
-        setIsLoading(false);
-      }
+      setIsLoading(false);
     };
 
     const fetchInitial = async () => {
       const { data, error } = await supabase.from("room").select("*").eq("id", roomId).maybeSingle();
-      if (error || !data) {
+      
+      if (error) {
+        console.error(error);
+        return;
+      }
+
+      if (!data) {
         setRoomExists(false);
         setIsLoading(false);
         return;
       }
+
       setRoomExists(true);
       if ((!data.categories || Object.keys(data.categories).length === 0) && data.p1_id === myId) {
         try {
@@ -88,6 +93,7 @@ export function useRoom() {
           if (updatedData) syncStates(updatedData);
         } catch (e) {
           console.error(e);
+          syncStates(data);
         }
       } else {
         syncStates(data);
