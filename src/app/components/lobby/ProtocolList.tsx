@@ -1,5 +1,3 @@
-"use client";
-
 export default function ProtocolList() {
   const serverId = "Oceania (Sydney) ap-southeast-2"
 
