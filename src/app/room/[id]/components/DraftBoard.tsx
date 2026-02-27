@@ -31,7 +31,7 @@ export default function DraftBoard({ team, oppTeam, budget, onPick, categories }
             </div>
             
             <div className="bg-black text-white px-4 py-2 flex justify-between items-center">
-              <span className="text-xs font-black tracking-[0.3em]">TIER_PROTOCOL</span>
+              <span className="text-xs font-black tracking-[0.3em]">Pick Catagory</span>
               <span className="text-2xl font-black italic">${costNum}</span>
             </div>
 
@@ -76,7 +76,7 @@ export default function DraftBoard({ team, oppTeam, budget, onPick, categories }
                         </div>
                       ) : !canAfford && (
                         <div className="text-[10px] text-red-600 font-black animate-pulse">
-                          LOW FUNDS
+                          LOW BUDGET
                         </div>
                       )}
                     </div>
