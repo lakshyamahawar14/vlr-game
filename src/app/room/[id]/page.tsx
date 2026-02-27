@@ -6,7 +6,7 @@ import TeamDisplay from "./components/TeamDisplay";
 import DraftBoard from "./components/DraftBoard";
 import ResultScreen from "./components/ResultScreen";
 import RoomNotFound from "./components/RoomNotFound";
-import ArenaLoading from "./components/ArenaLoading"; // New Import
+import ArenaLoading from "./components/ArenaLoading";
 
 export default function RoomPage() {
   const {
@@ -23,16 +23,26 @@ export default function RoomPage() {
     status,
     myValue,
     oppValue,
-    handlePick
+    handlePick,
+    categories,
+    rawStats
   } = useRoom();
 
-  if (!isMounted || isLoading) return <ArenaLoading />;
+  if (!isMounted || isLoading) {
+    return <ArenaLoading />;
+  }
 
-  if (!roomExists) return <RoomNotFound roomId={params.id as string} />;
+  if (!roomExists) {
+    return <RoomNotFound roomId={params.id as string} />;
+  }
 
   return (
     <div className="min-h-screen bg-white p-4 max-w-7xl mx-auto font-mono text-black">
-      <ArenaHeader budget={budget} status={status} timer={timer} />
+      <ArenaHeader 
+        budget={budget} 
+        status={status} 
+        timer={timer} 
+      />
 
       <div className="flex flex-col lg:grid lg:grid-cols-4 gap-6">
         <TeamDisplay 
@@ -49,13 +59,15 @@ export default function RoomPage() {
               oppTeam={oppTeam} 
               budget={budget} 
               onPick={handlePick} 
+              categories={categories || {}}
             />
           ) : (
             <ResultScreen 
               myName={myName} 
               oppName={oppName} 
-              myValue={myValue} 
-              oppValue={oppValue} 
+              myTeam={team}
+              oppTeam={oppTeam}
+              rawStats={rawStats}
             />
           )}
         </div>

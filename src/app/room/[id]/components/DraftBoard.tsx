@@ -1,13 +1,5 @@
 "use client";
 
-const CATEGORIES = {
-  50: ["aspas", "TenZ", "ZywOo"],
-  40: ["Derke", "Leo", "Chronicle"],
-  30: ["Boaster", "Saadhak", "FNS"],
-  20: ["Less", "Mazino", "Klaus"],
-  10: ["BuZz", "Rb", "Zest"]
-};
-
 type Player = { name: string; cost: number };
 
 interface Props {
@@ -15,80 +7,99 @@ interface Props {
   oppTeam: Player[];
   budget: number;
   onPick: (name: string, cost: number) => void;
+  categories: Record<string | number, string[]>;
 }
 
-export default function DraftBoard({ team, oppTeam, budget, onPick }: Props) {
+export default function DraftBoard({ team, oppTeam, budget, onPick, categories }: Props) {
+  if (!categories || Object.keys(categories).length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center p-12 border-4 border-dashed border-black">
+        <div className="w-8 h-8 border-4 border-black border-t-red-600 animate-spin mb-4" />
+        <div className="text-center font-black animate-pulse uppercase tracking-widest">
+          Synchronizing_Player_Pool...
+        </div>
+      </div>
+    );
+  }
+
+  const sortedCategories = Object.entries(categories).sort(
+    ([costA], [costB]) => Number(costB) - Number(costA)
+  );
+
   return (
-    <div className={`grid grid-cols-1 md:grid-cols-2 gap-4 ${team.length >= 5 ? 'opacity-40 grayscale pointer-events-none' : 'opacity-100'}`}>
-      {Object.entries(CATEGORIES).sort((a, b) => Number(b[0]) - Number(a[0])).map(([cost, players]) => (
-        <div key={cost} className="border-4 border-black bg-gray-50 flex flex-col relative overflow-hidden">
-          <div className="absolute top-0 right-0 p-1">
-            <div className="w-1.5 h-1.5 bg-black rotate-45" />
-          </div>
-          
-          <div className="bg-black text-white px-4 py-2 flex justify-between items-center">
-            <span className="text-xs font-black tracking-[0.3em]">TIER_PROTOCOL</span>
-            <span className="text-2xl font-black italic">${cost}</span>
-          </div>
+    <div className={`grid grid-cols-1 md:grid-cols-2 gap-4 transition-opacity duration-500 ${team.length >= 5 ? 'opacity-40 grayscale pointer-events-none' : 'opacity-100'}`}>
+      {sortedCategories.map(([cost, players]) => {
+        const costNum = Number(cost);
+        
+        return (
+          <div key={cost} className="border-4 border-black bg-gray-50 flex flex-col relative overflow-hidden">
+            <div className="absolute top-0 right-0 p-1">
+              <div className="w-1.5 h-1.5 bg-black rotate-45" />
+            </div>
+            
+            <div className="bg-black text-white px-4 py-2 flex justify-between items-center">
+              <span className="text-xs font-black tracking-[0.3em]">TIER_PROTOCOL</span>
+              <span className="text-2xl font-black italic">${costNum}</span>
+            </div>
 
-          <div className="p-3 space-y-2">
-            {players.map((p) => {
-              const costNum = parseInt(cost);
-              const isPicked = team.some(tp => tp.name === p);
-              const isOpponentPicked = oppTeam.some(tp => tp.name === p);
-              const canAfford = budget >= costNum;
-              const isRosterFull = team.length >= 5;
-              const isDisabled = isPicked || isOpponentPicked || !canAfford || isRosterFull;
+            <div className="p-3 space-y-2">
+              {players.map((p) => {
+                const isPicked = team.some(tp => tp.name === p);
+                const isOpponentPicked = oppTeam.some(tp => tp.name === p);
+                const canAfford = budget >= costNum;
+                const isRosterFull = team.length >= 5;
+                const isDisabled = isPicked || isOpponentPicked || !canAfford || isRosterFull;
 
-              return (
-                <button 
-                  key={p} 
-                  onClick={() => onPick(p, costNum)} 
-                  disabled={isDisabled} 
-                  className={`
-                    group relative w-full text-left p-4 font-black uppercase transition-all border-2 
-                    ${isPicked 
-                      ? 'bg-emerald-400 border-black translate-x-1 translate-y-1 shadow-none' 
-                      : isOpponentPicked 
-                      ? 'bg-gray-200 border-black/20 opacity-60 cursor-not-allowed grayscale' 
-                      : !canAfford 
-                      ? 'bg-white border-dashed border-gray-300 text-gray-300 cursor-not-allowed' 
-                      : 'bg-white border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:bg-yellow-300 hover:translate-x-1 hover:translate-y-1 hover:shadow-none'
-                    }
-                  `}
-                >
-                  <div className="flex justify-between items-center relative z-10">
-                    <div className="flex flex-col">
-                      <span className="text-xs text-gray-400 font-black tracking-widest leading-none mb-1">AGENT</span>
-                      <span className="text-lg leading-none tracking-tighter">{p}</span>
+                return (
+                  <button 
+                    key={p} 
+                    onClick={() => onPick(p, costNum)} 
+                    disabled={isDisabled} 
+                    className={`
+                      group relative w-full text-left p-4 font-black uppercase transition-all border-2 
+                      ${isPicked 
+                        ? 'bg-emerald-400 border-black translate-x-1 translate-y-1 shadow-none' 
+                        : isOpponentPicked 
+                        ? 'bg-gray-200 border-black/20 opacity-60 cursor-not-allowed grayscale' 
+                        : !canAfford 
+                        ? 'bg-white border-dashed border-gray-300 text-gray-300 cursor-not-allowed' 
+                        : 'bg-white border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:bg-yellow-300 hover:translate-x-1 hover:translate-y-1 hover:shadow-none'
+                      }
+                    `}
+                  >
+                    <div className="flex justify-between items-center relative z-10">
+                      <div className="flex flex-col">
+                        <span className="text-xs text-gray-400 font-black tracking-widest leading-none mb-1">AGENT</span>
+                        <span className="text-lg leading-none tracking-tighter">{p}</span>
+                      </div>
+
+                      {isOpponentPicked ? (
+                        <div className="bg-red-600 text-white text-[10px] px-2 py-1 rotate-12 border border-black">
+                          EXFILTRATED
+                        </div>
+                      ) : isPicked ? (
+                        <div className="bg-black text-white text-[10px] px-2 py-1 border border-black">
+                          SECURED
+                        </div>
+                      ) : !canAfford && (
+                        <div className="text-[10px] text-red-600 font-black animate-pulse">
+                          LOW_FUNDS
+                        </div>
+                      )}
                     </div>
-
-                    {isOpponentPicked ? (
-                      <div className="bg-red-600 text-white text-[10px] px-2 py-1 rotate-12 border border-black">
-                        EXFILTRATED
-                      </div>
-                    ) : isPicked ? (
-                      <div className="bg-black text-white text-[10px] px-2 py-1 border border-black">
-                        SECURED
-                      </div>
-                    ) : !canAfford && (
-                      <div className="text-[10px] text-red-600 font-black animate-pulse">
-                        LOW_FUNDS
+                    
+                    {!isDisabled && (
+                      <div className="absolute bottom-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="w-2 h-2 bg-black" />
                       </div>
                     )}
-                  </div>
-                  
-                  {!isDisabled && (
-                    <div className="absolute bottom-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <div className="w-2 h-2 bg-black" />
-                    </div>
-                  )}
-                </button>
-              );
-            })}
+                  </button>
+                );
+              })}
+            </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }

@@ -20,6 +20,8 @@ export function useRoom() {
   const [timer, setTimer] = useState(30);
   const [status, setStatus] = useState<string | null>(null);
   const [role, setRole] = useState<"p1" | "p2" | null>(null);
+  const [categories, setCategories] = useState<Record<string, string[]> | null>(null);
+  const [rawStats, setRawStats] = useState<Record<string, number>>({});
   const statusRef = useRef<string | null>(null);
 
   useEffect(() => {
@@ -34,42 +36,78 @@ export function useRoom() {
 
     const syncStates = (data: any) => {
       if (!data) return;
+      
       const isP1 = data.p1_id === myId;
       setRole(isP1 ? "p1" : "p2");
-      const incomingMyTeam = isP1 ? data.p1_team || [] : data.p2_team || [];
-      const incomingOppTeam = isP1 ? data.p2_team || [] : data.p1_team || [];
       
-      setTeam(incomingMyTeam);
-      setOppTeam(incomingOppTeam);
-      setBudget(100 - incomingMyTeam.reduce((acc: number, p: Player) => acc + p.cost, 0));
+      const inMyTeam = isP1 ? data.p1_team || [] : data.p2_team || [];
+      const inOppTeam = isP1 ? data.p2_team || [] : data.p1_team || [];
+      
+      setTeam(inMyTeam);
+      setOppTeam(inOppTeam);
+      setBudget(100 - inMyTeam.reduce((acc: number, p: Player) => acc + p.cost, 0));
+
+      setCategories(data.categories || null);
+      setRawStats(data.raw_stats || {});
       
       if (data.created_at && data.status === "DRAFTING") {
-        const startTime = new Date(data.created_at).getTime();
-        const elapsed = Math.floor((Date.now() - startTime) / 1000);
+        const start = new Date(data.created_at).getTime();
+        const elapsed = Math.floor((Date.now() - start) / 1000);
         setTimer(Math.max(0, 30 - elapsed));
       }
       
       setOppName(isP1 ? (data.p2_name || "WAITING...") : (data.p1_name || "WAITING..."));
       statusRef.current = data.status;
       setStatus(data.status);
-      setIsLoading(false);
+      
+      if (data.categories && Object.keys(data.categories).length > 0) {
+        setIsLoading(false);
+      }
     };
 
     const fetchInitial = async () => {
-      const { data } = await supabase.from("room").select("*").eq("id", roomId).maybeSingle();
-      if (data) {
-        setRoomExists(true);
-        syncStates(data);
-      } else {
+      const { data, error } = await supabase.from("room").select("*").eq("id", roomId).maybeSingle();
+      
+      if (error || !data) {
         setRoomExists(false);
         setIsLoading(false);
+        return;
+      }
+
+      setRoomExists(true);
+      
+      if ((!data.categories || Object.keys(data.categories).length === 0) && data.p1_id === myId) {
+        try {
+          const res = await fetch("/api/players");
+          const vlr = await res.json();
+
+          const { data: updatedData } = await supabase.from("room")
+            .update({ 
+              categories: vlr.pool,
+              raw_stats: vlr.rawStats 
+            })
+            .eq("id", roomId)
+            .select()
+            .single();
+          
+          if (updatedData) syncStates(updatedData);
+        } catch (e) {
+          console.error(e);
+        }
+      } else {
+        syncStates(data);
       }
     };
 
     fetchInitial();
 
-    const channel = supabase.channel(`room_sync_${roomId}`)
-      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "room", filter: `id=eq.${roomId}` }, (payload) => {
+    const channel = supabase.channel(`room_${roomId}`)
+      .on("postgres_changes", { 
+        event: "UPDATE", 
+        schema: "public", 
+        table: "room", 
+        filter: `id=eq.${roomId}` 
+      }, (payload) => {
         syncStates(payload.new);
       })
       .subscribe();
@@ -96,9 +134,7 @@ export function useRoom() {
     if (!params?.id || !role || status !== "DRAFTING" || team.length >= 5 || budget < cost) return;
     if (team.some(p => p.name === name) || oppTeam.some(p => p.name === name)) return;
 
-    const newPlayer = { name, cost };
-    
-    setTeam(prev => [...prev, newPlayer]);
+    setTeam(prev => [...prev, { name, cost }]);
     setBudget(prev => prev - cost);
 
     const { error } = await supabase.rpc('pick_player', {
@@ -112,9 +148,9 @@ export function useRoom() {
       const { data } = await supabase.from("room").select("*").eq("id", params.id).single();
       if (data) {
         const isP1 = role === "p1";
-        const correctedTeam = isP1 ? data.p1_team || [] : data.p2_team || [];
-        setTeam(correctedTeam);
-        setBudget(100 - correctedTeam.reduce((acc: number, p: Player) => acc + p.cost, 0));
+        const corrected = isP1 ? data.p1_team || [] : data.p2_team || [];
+        setTeam(corrected);
+        setBudget(100 - corrected.reduce((acc: number, p: Player) => acc + p.cost, 0));
       }
     }
   };
@@ -123,20 +159,8 @@ export function useRoom() {
   const oppValue = useMemo(() => oppTeam.reduce((acc, p) => acc + p.cost, 0), [oppTeam]);
 
   return {
-    params,
-    myId,
-    myName,
-    oppName,
-    isMounted,
-    isLoading,
-    roomExists,
-    team,
-    oppTeam,
-    budget,
-    timer,
-    status,
-    myValue,
-    oppValue,
-    handlePick
+    params, myId, myName, oppName, isMounted, isLoading, roomExists,
+    team, oppTeam, budget, timer, status, myValue, oppValue, handlePick,
+    categories, rawStats
   };
 }
