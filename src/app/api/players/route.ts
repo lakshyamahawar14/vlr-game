@@ -30,19 +30,14 @@ export async function GET() {
       throw new Error("DB_ERROR");
     }
 
-    const getRandomThree = (arr: any[]) => {
-      return [...arr]
-        .sort(() => 0.5 - Math.random())
-        .slice(0, 3)
-        .map(p => p.name);
-    };
+    const shuffled = [...allPlayers].sort(() => 0.5 - Math.random());
 
     const pool = {
-      30: getRandomThree(allPlayers),
-      25: getRandomThree(allPlayers),
-      20: getRandomThree(allPlayers),
-      15: getRandomThree(allPlayers),
-      10: getRandomThree(allPlayers)
+      30: shuffled.slice(0, 3).map(p => p.name),
+      25: shuffled.slice(3, 6).map(p => p.name),
+      20: shuffled.slice(6, 9).map(p => p.name),
+      15: shuffled.slice(9, 12).map(p => p.name),
+      10: shuffled.slice(12, 15).map(p => p.name)
     };
 
     const rawStats = allPlayers.reduce((acc, p) => {
@@ -53,22 +48,21 @@ export async function GET() {
     return NextResponse.json({ pool, rawStats });
 
   } catch (err) {
-    const fallbackRandom = (key: keyof typeof DEFAULT_POOL.pool) => {
-      return [...DEFAULT_POOL.pool[key]]
-        .sort(() => 0.5 - Math.random())
-        .slice(0, 3);
-    };
-
-    const shuffledPool = {
-      30: fallbackRandom(30),
-      25: fallbackRandom(25),
-      20: fallbackRandom(20),
-      15: fallbackRandom(15),
-      10: fallbackRandom(10)
+    const getUniqueFallback = () => {
+      const allNames = Object.values(DEFAULT_POOL.pool).flat();
+      const shuffledNames = [...allNames].sort(() => 0.5 - Math.random());
+      
+      return {
+        30: shuffledNames.slice(0, 3),
+        25: shuffledNames.slice(3, 6),
+        20: shuffledNames.slice(6, 9),
+        15: shuffledNames.slice(9, 12),
+        10: shuffledNames.slice(12, 15)
+      };
     };
 
     return NextResponse.json({ 
-      pool: shuffledPool, 
+      pool: getUniqueFallback(), 
       rawStats: DEFAULT_POOL.rawStats 
     });
   }
