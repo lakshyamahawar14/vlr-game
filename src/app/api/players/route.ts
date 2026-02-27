@@ -12,11 +12,11 @@ const DEFAULT_POOL = {
     10: ["Rb", "Zest", "Benkai", "Foxy9", "Nats", "Redgar"]
   },
   rawStats: {
-    "aspas": 1.35, "tenz": 1.28, "zywoo": 1.30, "chronicle": 1.25, "leo": 1.24, "sacy": 1.22,
-    "derke": 1.20, "cned": 1.19, "alfajer": 1.18, "less": 1.17, "yay": 1.16, "cryocells": 1.15,
-    "boaster": 1.12, "saadhak": 1.10, "fns": 1.08, "mako": 1.11, "p0ceit": 1.09, "zellsis": 1.07,
-    "mazino": 1.05, "klaus": 1.03, "buzz": 1.04, "stax": 1.02, "scary": 1.01, "ardiis": 1.00,
-    "rb": 0.98, "zest": 0.96, "benkai": 0.95, "foxy9": 0.94, "nats": 0.99, "redgar": 0.92
+    "aspas": 1, "tenz": 1, "zywoo": 1, "chronicle": 1, "leo": 1, "sacy": 1,
+    "derke": 1, "cned": 1, "alfajer": 1, "less": 1, "yay": 1, "cryocells": 1,
+    "boaster": 1, "saadhak": 1, "fns": 1, "mako": 1, "p0ceit": 1, "zellsis": 1,
+    "mazino": 1, "klaus": 1, "buzz": 1, "stax": 1, "scary": 1, "ardiis": 1,
+    "rb": 1, "zest": 1, "benkai": 1, "foxy9": 1, "nats": 1, "redgar": 1
   }
 };
 
@@ -24,27 +24,25 @@ export async function GET() {
   try {
     const { data: allPlayers, error } = await supabase
       .from("master_players")
-      .select("name, rating")
-      .order("rating", { ascending: false });
+      .select("name, rating");
 
-    if (error || !allPlayers || allPlayers.length < 10) {
+    if (error || !allPlayers || allPlayers.length < 15) {
       throw new Error("DB_ERROR");
     }
 
-    const getSample = (start: number, count: number) => {
-      return allPlayers
-        .slice(start, start + 25)
+    const getRandomThree = (arr: any[]) => {
+      return [...arr]
         .sort(() => 0.5 - Math.random())
-        .slice(0, count)
+        .slice(0, 3)
         .map(p => p.name);
     };
 
     const pool = {
-      30: getSample(0, 3),
-      25: getSample(25, 3),
-      20: getSample(50, 3),
-      15: getSample(75, 3),
-      10: getSample(100, 3)
+      30: getRandomThree(allPlayers),
+      25: getRandomThree(allPlayers),
+      20: getRandomThree(allPlayers),
+      15: getRandomThree(allPlayers),
+      10: getRandomThree(allPlayers)
     };
 
     const rawStats = allPlayers.reduce((acc, p) => {
@@ -55,14 +53,23 @@ export async function GET() {
     return NextResponse.json({ pool, rawStats });
 
   } catch (err) {
-    const shuffledPool = {
-      30: [...DEFAULT_POOL.pool[30]].sort(() => 0.5 - Math.random()).slice(0, 3),
-      25: [...DEFAULT_POOL.pool[25]].sort(() => 0.5 - Math.random()).slice(0, 3),
-      20: [...DEFAULT_POOL.pool[20]].sort(() => 0.5 - Math.random()).slice(0, 3),
-      15: [...DEFAULT_POOL.pool[15]].sort(() => 0.5 - Math.random()).slice(0, 3),
-      10: [...DEFAULT_POOL.pool[10]].sort(() => 0.5 - Math.random()).slice(0, 3)
+    const fallbackRandom = (key: keyof typeof DEFAULT_POOL.pool) => {
+      return [...DEFAULT_POOL.pool[key]]
+        .sort(() => 0.5 - Math.random())
+        .slice(0, 3);
     };
 
-    return NextResponse.json({ pool: shuffledPool, rawStats: DEFAULT_POOL.rawStats });
+    const shuffledPool = {
+      30: fallbackRandom(30),
+      25: fallbackRandom(25),
+      20: fallbackRandom(20),
+      15: fallbackRandom(15),
+      10: fallbackRandom(10)
+    };
+
+    return NextResponse.json({ 
+      pool: shuffledPool, 
+      rawStats: DEFAULT_POOL.rawStats 
+    });
   }
 }

@@ -18,7 +18,7 @@ export default function TeamDisplay({ name, value, team, variant }: Props) {
 
       <div className={`p-4 border-b-4 border-black relative z-10 ${isPlayer ? 'text-left' : 'text-right'}`}>
         <p className="text-[10px] font-black uppercase text-gray-400 tracking-[0.3em] mb-1">
-          {isPlayer ? "COMMANDER_NAME" : "HOSTILE_ID"}
+          {isPlayer ? "You" : "Opponent"}
         </p>
         <h2 className="text-2xl font-black uppercase italic tracking-tighter truncate leading-tight mb-2">
           {name}
