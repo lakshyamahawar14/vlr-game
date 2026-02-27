@@ -9,7 +9,7 @@ export default function ArenaHeader({ budget, status, timer }: Props) {
   const isUrgent = status === "DRAFTING" && timer <= 10;
 
   const getTimerBg = () => {
-    if (isEnded) return "bg-[#22C55E]"; 
+    if (isEnded) return "bg-[#FF5757]";
     if (status !== "DRAFTING") return "bg-[#E0E0E0]";
     if (isUrgent) return timer % 2 === 0 ? "bg-[#FF5757]" : "bg-[#FFDE59]";
     return timer % 2 === 0 ? "bg-[#FFDE59]" : "bg-white";
@@ -57,11 +57,11 @@ export default function ArenaHeader({ budget, status, timer }: Props) {
         )}
 
         {isEnded && (
-          <div className="p-6 flex flex-col items-center justify-center bg-[#22C55E]">
-            <p className="text-[10px] font-black uppercase tracking-[0.3em] mb-1 text-black/60">
+          <div className="p-3 flex flex-col items-center justify-center bg-[#FF5757] animate-in fade-in duration-500">
+            <p className="text-[10px] font-black uppercase tracking-[0.3em] mb-0.5 text-white/90">
               Match Status
             </p>
-            <div className="text-3xl md:text-5xl font-black uppercase italic tracking-tighter text-black leading-none">
+            <div className="text-2xl md:text-4xl font-black uppercase italic tracking-tighter text-white leading-none">
               FINISHED
             </div>
           </div>
