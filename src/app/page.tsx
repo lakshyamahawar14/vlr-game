@@ -11,15 +11,18 @@ export default function Home() {
     myId, username, setUsername, isMounted, isQueuing,
     onlineUsers, challengeStack, isWaitingForResponse,
     sendDuelRequest, cancelDuelRequest, acceptDuel, declineDuel, 
-    toggleQueue, trackPresence, enqueue
+    toggleQueue, trackPresence, enqueue, currentStatusRef
   } = useLobby();
 
   const handleSaveName = (newName: string) => {
     let clean = newName.trim() || "Unknown";
     if (clean.length > 12) clean = clean.slice(0, 12);
+    
     setUsername(clean);
     localStorage.setItem("vlr_duel_username", clean);
-    enqueue(() => trackPresence({ name: clean, challenging: isWaitingForResponse, isQueuing }));
+    currentStatusRef.current.name = clean;
+    
+    enqueue(() => trackPresence());
   };
 
   if (!isMounted) return <div className="min-h-screen bg-white" />;

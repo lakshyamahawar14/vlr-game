@@ -24,24 +24,39 @@ export function useLobby() {
   const presenceChannelRef = useRef<any>(null);
   const matchmakingLockRef = useRef<boolean>(false);
   const actionQueueRef = useRef<Promise<void>>(Promise.resolve());
+  
+  const currentStatusRef = useRef({
+    name: "",
+    isQueuing: false,
+    challenging: null as string | null
+  });
 
   const enqueue = (fn: () => Promise<void>) => {
     actionQueueRef.current = actionQueueRef.current.then(fn).catch(() => {});
   };
 
-  const trackPresence = async (data: { name: string; challenging: string | null; isQueuing: boolean }) => {
-    if (!presenceChannelRef.current || !data.name || data.name === "YOU") return;
-    await presenceChannelRef.current.track(data);
+  const trackPresence = async () => {
+    if (!presenceChannelRef.current) return;
+    const latestName = localStorage.getItem("vlr_duel_username") || currentStatusRef.current.name;
+    if (!latestName || latestName === "YOU") return;
+
+    await presenceChannelRef.current.track({
+      name: latestName,
+      challenging: currentStatusRef.current.challenging,
+      isQueuing: currentStatusRef.current.isQueuing
+    });
   };
 
   const sendDuelRequest = (targetId: string) => {
     setIsWaitingForResponse(targetId);
-    enqueue(() => trackPresence({ name: username, challenging: targetId, isQueuing }));
+    currentStatusRef.current.challenging = targetId;
+    enqueue(() => trackPresence());
   };
 
   const cancelDuelRequest = () => {
     setIsWaitingForResponse(null);
-    enqueue(() => trackPresence({ name: username, challenging: null, isQueuing }));
+    currentStatusRef.current.challenging = null;
+    enqueue(() => trackPresence());
   };
 
   const acceptDuel = () => {
@@ -88,8 +103,9 @@ export function useLobby() {
   const toggleQueue = () => {
     const next = !isQueuing;
     setIsQueuing(next);
+    currentStatusRef.current.isQueuing = next;
     matchmakingLockRef.current = false;
-    enqueue(() => trackPresence({ name: username, challenging: isWaitingForResponse, isQueuing: next }));
+    enqueue(() => trackPresence());
   };
 
   useEffect(() => {
@@ -100,6 +116,7 @@ export function useLobby() {
 
     const storedName = localStorage.getItem("vlr_duel_username") || `Player_${uid.slice(0, 4)}`;
     setUsername(storedName);
+    currentStatusRef.current.name = storedName;
 
     const channel = supabase.channel("global_lobby", {
       config: { presence: { key: uid }, broadcast: { self: true } },
@@ -123,7 +140,9 @@ export function useLobby() {
       const me = users.find((u) => u.id === uid);
       if (me) {
         setIsQueuing(!!me.isQueuing);
+        currentStatusRef.current.isQueuing = !!me.isQueuing;
         setIsWaitingForResponse(me.challenging || null);
+        currentStatusRef.current.challenging = me.challenging || null;
       }
 
       setChallengeStack(users.filter((u) => u.challenging === uid).map((u) => ({ id: u.id, name: u.name })));
@@ -135,7 +154,9 @@ export function useLobby() {
       .on("presence", { event: "leave" }, syncState)
       .on("broadcast", { event: "duel_declined" }, (payload: any) => {
         if (payload.payload.challengerId === uid) {
-          enqueue(() => trackPresence({ name: storedName, challenging: null, isQueuing }));
+          currentStatusRef.current.challenging = null;
+          setIsWaitingForResponse(null);
+          enqueue(() => trackPresence());
         }
       })
       .on("broadcast", { event: "duel_started" }, (payload: any) => {
@@ -145,7 +166,7 @@ export function useLobby() {
       })
       .subscribe(async (status: string) => {
         if (status === "SUBSCRIBED") {
-          await trackPresence({ name: storedName, challenging: null, isQueuing: false });
+          await trackPresence();
         }
       });
 
@@ -183,6 +204,6 @@ export function useLobby() {
 
   return {
     myId, username, setUsername, isMounted, isQueuing, onlineUsers, challengeStack, isWaitingForResponse,
-    sendDuelRequest, cancelDuelRequest, acceptDuel, declineDuel, toggleQueue, trackPresence, enqueue
+    sendDuelRequest, cancelDuelRequest, acceptDuel, declineDuel, toggleQueue, trackPresence, enqueue, currentStatusRef
   };
 }

@@ -41,7 +41,6 @@ export default function ProtocolList() {
               <p className="text-[14px] font-black uppercase leading-snug text-gray-800">
                 {p.rule}
               </p>
-              <div className={`absolute -bottom-1 left-0 w-8 h-1 ${p.color.replace('text', 'bg')} opacity-40`} />
             </div>
           </li>
         ))}
