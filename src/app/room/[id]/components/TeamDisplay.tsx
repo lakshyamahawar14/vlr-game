@@ -30,7 +30,7 @@ export default function TeamDisplay({ name, value, team, variant }: Props) {
       </div>
 
       <div className={`flex items-center justify-between px-4 py-2 border-b-2 border-black ${isPlayer ? 'bg-yellow-300' : 'bg-zinc-200'}`}>
-        <span className="text-[10px] font-black uppercase tracking-widest">Roster_Status</span>
+        <span className="text-[10px] font-black uppercase tracking-widest">Roster Status</span>
         <span className="text-sm font-black italic">{team.length} / 5</span>
       </div>
 
@@ -49,7 +49,7 @@ export default function TeamDisplay({ name, value, team, variant }: Props) {
             {team[i] ? (
               <>
                 <div className="flex flex-col">
-                  <span className="text-[8px] font-black text-gray-400 tracking-tighter">SLOT_0{i + 1}</span>
+                  <span className="text-[8px] font-black text-gray-400 tracking-tighter">SLOT 0{i + 1}</span>
                   <span className="font-black uppercase italic tracking-tight truncate max-w-[100px] md:max-w-none">
                     {team[i].name}
                   </span>
@@ -60,7 +60,7 @@ export default function TeamDisplay({ name, value, team, variant }: Props) {
               </>
             ) : (
               <div className="w-full flex justify-between items-center opacity-40">
-                <span className="text-[10px] font-black tracking-widest uppercase">Empty_Slot</span>
+                <span className="text-[10px] font-black tracking-widest uppercase">Empty Slot</span>
                 <div className="w-4 h-[2px] bg-zinc-300" />
               </div>
             )}

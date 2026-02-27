@@ -1,3 +1,7 @@
+"use client";
+
+import { useMemo } from "react";
+
 type Player = { name: string; cost: number };
 
 interface Props {
@@ -9,20 +13,11 @@ interface Props {
 }
 
 export default function DraftBoard({ team, oppTeam, budget, onPick, categories }: Props) {
-  if (!categories || Object.keys(categories).length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center p-12 border-4 border-dashed border-black">
-        <div className="w-8 h-8 border-4 border-black border-t-red-600 animate-spin mb-4" />
-        <div className="text-center font-black animate-pulse uppercase tracking-widest">
-          Synchronizing_Player_Pool...
-        </div>
-      </div>
+  const sortedCategories = useMemo(() => {
+    return Object.entries(categories || {}).sort(
+      ([costA], [costB]) => Number(costB) - Number(costA)
     );
-  }
-
-  const sortedCategories = Object.entries(categories).sort(
-    ([costA], [costB]) => Number(costB) - Number(costA)
-  );
+  }, [categories]);
 
   return (
     <div className={`grid grid-cols-1 md:grid-cols-2 gap-4 transition-opacity duration-500 ${team.length >= 5 ? 'opacity-40 grayscale pointer-events-none' : 'opacity-100'}`}>
@@ -73,15 +68,15 @@ export default function DraftBoard({ team, oppTeam, budget, onPick, categories }
 
                       {isOpponentPicked ? (
                         <div className="bg-red-600 text-white text-[10px] px-2 py-1 rotate-12 border border-black">
-                          EXFILTRATED
+                          ALREADY TAKEN
                         </div>
                       ) : isPicked ? (
                         <div className="bg-black text-white text-[10px] px-2 py-1 border border-black">
-                          SECURED
+                          PICKED
                         </div>
                       ) : !canAfford && (
                         <div className="text-[10px] text-red-600 font-black animate-pulse">
-                          LOW_FUNDS
+                          LOW FUNDS
                         </div>
                       )}
                     </div>

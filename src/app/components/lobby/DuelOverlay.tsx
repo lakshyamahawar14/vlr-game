@@ -18,14 +18,17 @@ export default function DuelOverlay({ challengeStack, onAccept, onDecline }: Pro
       
       <div className="relative mb-8 text-center">
         <div className="inline-block px-3 py-1 bg-red-600 text-black text-[10px] font-black uppercase mb-4 tracking-[0.2em] animate-bounce">
-          System Intrusion
+          Incoming Duel Invite
         </div>
         <p className="text-gray-400 text-[10px] font-black uppercase tracking-widest mb-1">
-          Inbound Challenge ({challengeStack.length})
+          Inbound Duel Invites ({challengeStack.length})
         </p>
-        <h3 className="text-4xl md:text-5xl font-black uppercase italic text-white tracking-tighter leading-none break-all">
+        <h3 className="text-4xl md:text-5xl font-black uppercase italic text-white tracking-tighter leading-none break-all mb-2">
           {currentChallenge.name}
         </h3>
+        <p className="text-[11px] font-mono text-white uppercase tracking-wider font-bold">
+          User ID: {currentChallenge.id.slice(0, 8)}
+        </p>
       </div>
 
       <div className="flex flex-col gap-4 w-full max-w-xs relative">
@@ -34,7 +37,7 @@ export default function DuelOverlay({ challengeStack, onAccept, onDecline }: Pro
           className="relative group bg-white text-black py-5 text-xl font-black uppercase transition-all hover:-translate-y-1 hover:bg-emerald-400 active:translate-y-0"
         >
           <span className="relative z-10 flex items-center justify-center gap-2">
-            Accept Duel
+            Accept
           </span>
           <div className="absolute inset-0 border-2 border-white translate-x-2 translate-y-2 group-hover:translate-x-0 group-hover:translate-y-0 transition-all -z-10" />
         </button>

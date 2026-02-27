@@ -104,7 +104,7 @@ export default function ResultScreen({ myName, oppName, myTeam, oppTeam, rawStat
           onClick={() => router.push("/")}
           className="w-full md:w-auto md:px-12 block mx-auto bg-black text-white py-4 font-black uppercase text-xl transition-all hover:bg-yellow-400 hover:text-black border-2 border-black active:translate-y-1"
         >
-          Return_to_Lobby
+          Return to Lobby
         </button>
       </div>
     </div>

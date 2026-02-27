@@ -26,7 +26,7 @@ export default function ArenaHeader({ budget, status, timer }: Props) {
           <>
             <div className="p-4 border-b-[4px] md:border-b-0 md:border-r-[4px] border-black bg-[#5271FF]">
               <p className="text-[10px] font-black uppercase tracking-widest mb-1 text-white/80">
-                Available Capital
+                Available Budget
               </p>
               <div className="text-3xl md:text-4xl font-black tracking-tight text-white leading-none">
                 ${(budget ?? 0).toLocaleString()}
@@ -47,7 +47,7 @@ export default function ArenaHeader({ budget, status, timer }: Props) {
 
             <div className="p-4 bg-[#A855F7] flex flex-col md:items-end justify-center">
               <p className="text-[10px] font-black uppercase tracking-widest mb-1 text-white/80">
-                Status
+                Match Status
               </p>
               <div className="text-2xl md:text-3xl font-black uppercase italic tracking-tighter text-white leading-none">
                 {status || "Standby"}

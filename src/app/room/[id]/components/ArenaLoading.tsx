@@ -13,7 +13,7 @@ export default function ArenaLoading() {
 
         <div className="flex flex-col items-center gap-4">
           <h2 className="text-4xl md:text-6xl font-black italic uppercase tracking-tighter">
-            Arena <span className="text-red-600">Loading</span>
+            Loading <span className="text-red-600">Duel</span>
           </h2>
           
           <div className="flex items-center gap-3">
@@ -23,7 +23,7 @@ export default function ArenaLoading() {
           </div>
 
           <p className="text-[10px] font-black uppercase tracking-[0.4em] text-gray-400 mt-4 animate-pulse">
-            Establishing Protocol...
+            Preparing Player Pool
           </p>
         </div>
       </div>

@@ -58,7 +58,7 @@ export default function MainHero({
             {isEditingName ? "CONFIRM" : "RENAME"}
           </button>
         </div>
-        <p className="text-[10px] font-black uppercase text-gray-300">{`UID: ${myId.slice(0, 8)}`}</p>
+        <p className="text-[10px] font-black uppercase text-gray-300">{`User ID: ${myId.slice(0, 8)}`}</p>
       </div>
 
       <div className="relative z-10 flex flex-col items-center">
@@ -73,7 +73,7 @@ export default function MainHero({
         <div className="flex items-center gap-4 mb-12">
           <div className="h-[2px] w-8 bg-black" />
           <p className="text-gray-500 font-black tracking-[0.3em] uppercase text-center text-[10px] md:text-[12px]">
-            High-Stakes Tactical Drafting
+            Realtime Roster Drafting 1v1 Duel Game
           </p>
           <div className="h-[2px] w-8 bg-black" />
         </div>

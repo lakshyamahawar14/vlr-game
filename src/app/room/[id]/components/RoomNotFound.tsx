@@ -23,7 +23,7 @@ export default function RoomNotFound({ roomId }: Props) {
 
         <div className="mb-10 space-y-4">
           <p className="text-gray-400 text-sm font-black uppercase tracking-widest">
-            The requested arena protocol does not exist or has been terminated.
+            The requested Room does not exist or has been terminated.
           </p>
           
           <div className="bg-zinc-900 p-4 border-l-4 border-red-600 inline-block w-full">
@@ -39,7 +39,7 @@ export default function RoomNotFound({ roomId }: Props) {
             onClick={() => router.push("/")}
             className="group relative bg-white text-black px-12 py-4 font-black uppercase text-xl transition-all hover:bg-yellow-400 active:translate-y-1 w-full md:w-auto"
           >
-            <span className="relative z-10">Return to HQ</span>
+            <span className="relative z-10">Return to Lobby</span>
             <div className="absolute inset-0 border-2 border-white translate-x-2 translate-y-2 group-hover:translate-x-0 group-hover:translate-y-0 transition-all -z-10" />
           </button>
 
@@ -48,11 +48,6 @@ export default function RoomNotFound({ roomId }: Props) {
             <span className="w-3 h-3 bg-zinc-700" />
             <span className="w-3 h-3 bg-zinc-700" />
           </div>
-        </div>
-
-        <div className="absolute bottom-4 left-4 right-4 flex justify-between opacity-20 text-[8px] font-black uppercase tracking-[0.3em]">
-          <span>ERR_CODE: NULL_VOX</span>
-          <span>STT: DISCONNECTED</span>
         </div>
       </div>
     </div>

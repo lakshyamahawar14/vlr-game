@@ -1,29 +1,28 @@
+"use client";
+
 export default function ProtocolList() {
+  const serverId = "Oceania (Sydney) ap-southeast-2"
+
   const protocols = [
     { 
       id: "01", 
-      rule: "Join the Live Queue or click DUEL on an online player to start a match.",
+      rule: "Join the match by either Queuing up or sending/accepting duel requests to online players.",
       color: "text-blue-600"
     },
     { 
       id: "02", 
-      rule: "Draft exactly five players. Stay under the $100 budget to qualify.",
+      rule: "Five catagories of players are available, each with a different cost. Build your roster within the $100 budget.",
       color: "text-emerald-600"
     },
     { 
       id: "03", 
-      rule: "You have 30 seconds. If the clock hits zero, your current roster locks.",
+      rule: "One player can only be picked by one person. So if your opponent picks a player, you can no longer pick them for your roster.",
       color: "text-amber-600"
     },
     { 
       id: "04", 
-      rule: "Picks are live. If an opponent takes a player, they are gone from the pool.",
+      rule: "After 30 seconds, yours and your opponent's roster will be locked in and result of the duel will be decided by the average rating of the roster.",
       color: "text-purple-600"
-    },
-    { 
-      id: "05", 
-      rule: "The manager with the highest total roster value wins the duel.",
-      color: "text-red-600"
     },
   ];
 
@@ -52,7 +51,9 @@ export default function ProtocolList() {
 
       <div className="mt-auto pt-8">
         <div className="border-2 border-black p-2 bg-black text-white text-center">
-          <p className="text-[10px] font-black tracking-widest uppercase">Version : 1.0.0</p>
+          <p className="text-[10px] font-black tracking-widest uppercase">
+            SERVER : {serverId}
+          </p>
         </div>
       </div>
     </div>

@@ -20,8 +20,8 @@ export default function PlayerLists({
     const isMe = user.id === myId;
     
     return (
-      <div className={`group relative p-4 border-2 border-black transition-all duration-75 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] ${
-        isMe ? "bg-yellow-300" : "bg-white"
+      <div className={`relative p-4 border-2 border-black transition-all duration-75 ${
+        isMe ? "bg-emerald-100" : "bg-white"
       }`}>
         <div className="flex justify-between items-start mb-1">
           <div className="flex flex-col">
@@ -29,9 +29,9 @@ export default function PlayerLists({
               {user.name}
             </span>
             <div className="flex items-center gap-1">
-               <div className={`w-1.5 h-1.5 rounded-full ${isQueuing ? "bg-orange-500 animate-pulse" : "bg-green-500"}`} />
+               <div className={`w-1.5 h-1.5 rounded-full ${isQueuing ? "bg-yellow-500 animate-pulse" : "bg-emerald-500"}`} />
                <p className="text-[9px] font-black text-gray-400 uppercase tracking-tighter">
-                 {isQueuing ? "In Queue" : "Idle"}
+                 {isQueuing ? "In Queue" : "Available"}
                </p>
             </div>
           </div>
@@ -44,8 +44,8 @@ export default function PlayerLists({
                 onClick={() => isWaitingForResponse === user.id ? onCancelDuel() : onSendDuel(user.id)} 
                 className={`text-[10px] px-3 py-1 font-black uppercase border-2 border-black transition-all ${
                   isWaitingForResponse === user.id 
-                  ? "bg-red-600 text-white animate-pulse shadow-none" 
-                  : "bg-white text-black hover:bg-black hover:text-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:shadow-none"
+                  ? "bg-red-600 text-white animate-pulse" 
+                  : "bg-white text-black hover:bg-black hover:text-white"
                 }`}
               >
                 {isWaitingForResponse === user.id ? "CANCEL" : "DUEL"}
@@ -61,12 +61,12 @@ export default function PlayerLists({
     <div className="w-full flex flex-col h-full bg-gray-50">
       <div className="flex-1 flex flex-col min-h-[300px] border-b-4 border-black">
         <div className="p-6 pb-4 bg-white">
-          <div className="flex justify-between items-center border-b-4 border-black pb-1">
+          <div className="flex justify-between items-center border-b-4 border-emerald-500 pb-1">
             <h2 className="text-xl font-black uppercase italic flex items-center gap-2">
-              <span className="w-2 h-6 bg-blue-600 inline-block" />
-              Online
+              <span className="w-2 h-6 bg-emerald-500 inline-block" />
+              Online Players
             </h2>
-            <div className="font-black text-xs bg-black text-white px-2 py-0.5 rounded-full">
+            <div className="font-black text-xs bg-emerald-500 text-white px-2 py-0.5 rounded-full">
               {onlineUsers.length}
             </div>
           </div>
@@ -85,22 +85,22 @@ export default function PlayerLists({
 
       <div className="flex-1 flex flex-col min-h-[300px] bg-white relative">
         <div className="p-6 pb-4">
-          <div className="flex justify-between items-center border-b-4 border-orange-500 pb-1">
+          <div className="flex justify-between items-center border-b-4 border-yellow-400 pb-1">
             <h2 className="text-xl font-black uppercase italic flex items-center gap-2">
-              <span className="w-2 h-6 bg-orange-500 inline-block animate-pulse" />
+              <span className="w-2 h-6 bg-yellow-400 inline-block animate-pulse" />
               Live Queue
             </h2>
-            <div className="font-black text-xs bg-orange-500 text-white px-2 py-0.5 rounded-full">
+            <div className="font-black text-xs bg-yellow-400 text-black px-2 py-0.5 rounded-full">
               {queueMembers.length}
             </div>
           </div>
         </div>
         
-        <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4 custom-scrollbar bg-orange-50/30">
+        <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4 custom-scrollbar bg-yellow-50/30">
           {queueMembers.length === 0 ? (
             <div className="border-4 border-dashed border-gray-200 p-8 text-center flex flex-col items-center justify-center h-32">
               <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">
-                Scanning for signatures...
+                Scanning for Live Queues...
               </p>
             </div>
           ) : (
@@ -111,7 +111,7 @@ export default function PlayerLists({
         </div>
 
         {queueMembers.length > 0 && (
-            <div className="absolute bottom-0 left-0 w-full h-1 bg-orange-500/20 animate-pulse" />
+            <div className="absolute bottom-0 left-0 w-full h-1 bg-yellow-400/20 animate-pulse" />
         )}
       </div>
 
@@ -119,7 +119,7 @@ export default function PlayerLists({
         .custom-scrollbar::-webkit-scrollbar { width: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; border-left: 2px solid black; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #000; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #ef4444; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #10b981; }
       `}</style>
     </div>
   );
