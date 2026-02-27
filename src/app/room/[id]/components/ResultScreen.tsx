@@ -36,7 +36,6 @@ export default function ResultScreen({ myName, oppName, myTeam, oppTeam, rawStat
 
   return (
     <div className="w-full bg-white border-4 border-black font-mono shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] flex flex-col">
-      {/* Top Banner */}
       <div className="bg-yellow-400 border-b-4 border-black p-4 flex justify-between items-center">
         <div>
           <h1 className="text-xl md:text-3xl font-black uppercase tracking-tight">Post-Match_Report</h1>
@@ -48,9 +47,7 @@ export default function ResultScreen({ myName, oppName, myTeam, oppTeam, rawStat
         </div>
       </div>
 
-      {/* Main Content Area */}
       <div className="flex flex-col md:flex-row divide-y-4 md:divide-y-0 md:divide-x-4 divide-black">
-        {/* Your Team Section */}
         <div className="flex-1 p-4 md:p-6 bg-emerald-50/30">
           <div className="flex justify-between items-center mb-4 border-b-2 border-black/10 pb-2">
             <h2 className="text-lg font-black uppercase tracking-tighter">{myName}</h2>
@@ -74,7 +71,6 @@ export default function ResultScreen({ myName, oppName, myTeam, oppTeam, rawStat
           </div>
         </div>
 
-        {/* Opponent Team Section */}
         <div className="flex-1 p-4 md:p-6 bg-red-50/30">
           <div className="flex justify-between items-center mb-4 border-b-2 border-black/10 pb-2">
             <h2 className="text-lg font-black uppercase tracking-tighter">{oppName}</h2>
@@ -99,7 +95,6 @@ export default function ResultScreen({ myName, oppName, myTeam, oppTeam, rawStat
         </div>
       </div>
 
-      {/* Bottom Action Area */}
       <div className="p-4 border-t-4 border-black bg-gray-50">
         <button 
           onClick={() => router.push("/")}

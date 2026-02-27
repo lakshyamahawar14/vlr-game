@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
-import * as cheerio from "cheerio";
+import { supabase } from "@/lib/supabase";
+
+export const dynamic = 'force-dynamic';
 
 const DEFAULT_POOL = {
   pool: {
@@ -19,46 +21,30 @@ const DEFAULT_POOL = {
 };
 
 export async function GET() {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 5000); 
-
   try {
-    const response = await fetch("https://www.vlr.gg/stats/?event_group_id=all&timespan=60d", {
-      headers: {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
-        "Accept-Language": "en-US,en;q=0.5",
-        "Sec-Fetch-Mode": "navigate",
-      },
-      signal: controller.signal,
-    });
+    const { data: allPlayers, error } = await supabase
+      .from("master_players")
+      .select("name, rating")
+      .order("rating", { ascending: false });
 
-    clearTimeout(timeoutId);
-
-    if (!response.ok) throw new Error("BLOCKED");
-
-    const html = await response.text();
-    const $ = cheerio.load(html);
-    const allPlayers: { name: string; rating: number }[] = [];
-
-    $(".wf-table tbody tr").each((_, el) => {
-      const name = $(el).find("div.text-of").first().text().trim();
-      const rating = parseFloat($(el).find("td.mod-color-sq").first().text().trim());
-      if (name && !isNaN(rating)) allPlayers.push({ name, rating });
-    });
-
-    if (allPlayers.length < 50) throw new Error("PARSING_ERR");
+    if (error || !allPlayers || allPlayers.length < 10) {
+      throw new Error("DB_ERROR");
+    }
 
     const getSample = (start: number, count: number) => {
-      return allPlayers.slice(start, start + 20).sort(() => 0.5 - Math.random()).slice(0, count).map(p => p.name);
+      return allPlayers
+        .slice(start, start + 25)
+        .sort(() => 0.5 - Math.random())
+        .slice(0, count)
+        .map(p => p.name);
     };
 
     const pool = {
       30: getSample(0, 3),
-      25: getSample(20, 3),
-      20: getSample(40, 3),
-      15: getSample(60, 3),
-      10: getSample(80, 3)
+      25: getSample(25, 3),
+      20: getSample(50, 3),
+      15: getSample(75, 3),
+      10: getSample(100, 3)
     };
 
     const rawStats = allPlayers.reduce((acc, p) => {
