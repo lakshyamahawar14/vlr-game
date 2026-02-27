@@ -46,12 +46,11 @@ export function useRoom() {
       setTeam(inMyTeam);
       setOppTeam(inOppTeam);
       setBudget(100 - inMyTeam.reduce((acc: number, p: Player) => acc + p.cost, 0));
-
       setCategories(data.categories || null);
       setRawStats(data.raw_stats || {});
       
-      if (data.created_at && data.status === "DRAFTING") {
-        const start = new Date(data.created_at).getTime();
+      if (data.draft_start_at && data.status === "DRAFTING") {
+        const start = new Date(data.draft_start_at).getTime();
         const elapsed = Math.floor((Date.now() - start) / 1000);
         setTimer(Math.max(0, 30 - elapsed));
       }
@@ -84,7 +83,8 @@ export function useRoom() {
           const { data: updatedData } = await supabase.from("room")
             .update({ 
               categories: vlr.pool,
-              raw_stats: vlr.rawStats 
+              raw_stats: vlr.rawStats,
+              draft_start_at: new Date().toISOString()
             })
             .eq("id", roomId)
             .select()
@@ -114,12 +114,14 @@ export function useRoom() {
 
     const interval = setInterval(() => {
       if (statusRef.current === "DRAFTING") {
-        setTimer((p) => {
-          if (p <= 1) {
-            if (role === "p1") supabase.from("room").update({ status: "ENDED" }).eq("id", roomId).then();
+        setTimer((prev) => {
+          if (prev <= 1) {
+            if (myId && role === "p1") {
+              supabase.from("room").update({ status: "ENDED" }).eq("id", roomId).then();
+            }
             return 0;
           }
-          return p - 1;
+          return prev - 1;
         });
       }
     }, 1000);
@@ -133,26 +135,16 @@ export function useRoom() {
   const handlePick = async (name: string, cost: number) => {
     if (!params?.id || !role || status !== "DRAFTING" || team.length >= 5 || budget < cost) return;
     if (team.some(p => p.name === name) || oppTeam.some(p => p.name === name)) return;
-
+    
     setTeam(prev => [...prev, { name, cost }]);
     setBudget(prev => prev - cost);
 
-    const { error } = await supabase.rpc('pick_player', {
+    await supabase.rpc('pick_player', {
       room_id_input: params.id,
       player_name: name,
       player_cost: cost,
       player_role: role
     });
-
-    if (error) {
-      const { data } = await supabase.from("room").select("*").eq("id", params.id).single();
-      if (data) {
-        const isP1 = role === "p1";
-        const corrected = isP1 ? data.p1_team || [] : data.p2_team || [];
-        setTeam(corrected);
-        setBudget(100 - corrected.reduce((acc: number, p: Player) => acc + p.cost, 0));
-      }
-    }
   };
 
   const myValue = useMemo(() => team.reduce((acc, p) => acc + p.cost, 0), [team]);

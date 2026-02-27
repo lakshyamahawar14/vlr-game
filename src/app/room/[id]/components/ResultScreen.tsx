@@ -27,73 +27,86 @@ export default function ResultScreen({ myName, oppName, myTeam, oppTeam, rawStat
   }, [oppTeam, rawStats]);
 
   const winnerName = useMemo(() => {
-    if (parseFloat(myAvg) > parseFloat(oppAvg)) return myName;
-    if (parseFloat(oppAvg) > parseFloat(myAvg)) return oppName;
+    const myVal = parseFloat(myAvg);
+    const oppVal = parseFloat(oppAvg);
+    if (myVal > oppVal) return myName;
+    if (oppVal > myVal) return oppName;
     return "DRAW";
   }, [myAvg, oppAvg, myName, oppName]);
 
   return (
-    <div className="relative bg-black text-white p-8 md:p-12 border-4 border-black overflow-hidden shadow-[12px_12px_0px_0px_rgba(0,0,0,1)]">
-      <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-red-600 via-yellow-400 to-red-600" />
-      
-      <div className="flex justify-between items-start mb-8">
-        <div className="text-left">
-          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-500">Operation_Status</p>
-          <h2 className="text-5xl md:text-7xl font-black italic uppercase tracking-tighter leading-none">
-            {winnerName === "DRAW" ? "STALEMATE" : "DEBRIEF"}
-          </h2>
+    <div className="w-full bg-white border-4 border-black font-mono shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] flex flex-col">
+      {/* Top Banner */}
+      <div className="bg-yellow-400 border-b-4 border-black p-4 flex justify-between items-center">
+        <div>
+          <h1 className="text-xl md:text-3xl font-black uppercase tracking-tight">Post-Match_Report</h1>
+          <p className="text-[10px] font-bold opacity-70">STATUS: {winnerName === "DRAW" ? "STALEMATE" : "DECISIVE_VICTORY"}</p>
+        </div>
+        <div className="text-right">
+          <p className="text-[10px] font-black uppercase text-black/60">Winner</p>
+          <p className="text-xl md:text-2xl font-black uppercase underline decoration-black decoration-2">{winnerName}</p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
-        <div className={`p-6 border-2 ${winnerName === myName ? 'border-emerald-500 bg-emerald-500/5' : 'border-white/10'}`}>
-          <div className="flex justify-between items-end mb-4 border-b border-white/10 pb-2">
-            <p className="text-xs font-black uppercase text-gray-400">{myName}</p>
-            <p className="text-4xl font-black italic">{myAvg}</p>
+      {/* Main Content Area */}
+      <div className="flex flex-col md:flex-row divide-y-4 md:divide-y-0 md:divide-x-4 divide-black">
+        {/* Your Team Section */}
+        <div className="flex-1 p-4 md:p-6 bg-emerald-50/30">
+          <div className="flex justify-between items-center mb-4 border-b-2 border-black/10 pb-2">
+            <h2 className="text-lg font-black uppercase tracking-tighter">{myName}</h2>
+            <div className="text-right">
+              <span className="text-[10px] block font-black text-emerald-600">AVG_RATING</span>
+              <span className="text-3xl font-black italic leading-none">{myAvg}</span>
+            </div>
           </div>
-          <div className="space-y-2">
-            {myTeam.map(p => (
-              <div key={p.name} className="flex justify-between text-[10px] font-mono opacity-70">
-                <span>{p.name.toUpperCase()}</span>
-                <span className="text-emerald-400">R_{rawStats[p.name.toLowerCase()]?.toFixed(2)}</span>
+          <div className="grid grid-cols-1 gap-2">
+            {myTeam.map((p) => (
+              <div key={p.name} className="flex justify-between items-center p-2 border-2 border-black bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+                <div className="flex flex-col">
+                  <span className="text-sm font-black uppercase">{p.name}</span>
+                  <span className="text-[10px] font-bold text-gray-400 leading-none">${p.cost}</span>
+                </div>
+                <div className="text-right">
+                  <span className="text-xs font-black bg-black text-white px-2 py-0.5">{(rawStats[p.name.toLowerCase()] || 0).toFixed(2)}</span>
+                </div>
               </div>
             ))}
           </div>
         </div>
 
-        <div className={`p-6 border-2 ${winnerName === oppName ? 'border-red-600 bg-red-600/5' : 'border-white/10'}`}>
-          <div className="flex justify-between items-end mb-4 border-b border-white/10 pb-2">
-            <p className="text-xs font-black uppercase text-gray-400">{oppName}</p>
-            <p className="text-4xl font-black italic">{oppAvg}</p>
+        {/* Opponent Team Section */}
+        <div className="flex-1 p-4 md:p-6 bg-red-50/30">
+          <div className="flex justify-between items-center mb-4 border-b-2 border-black/10 pb-2">
+            <h2 className="text-lg font-black uppercase tracking-tighter">{oppName}</h2>
+            <div className="text-right">
+              <span className="text-[10px] block font-black text-red-600">AVG_RATING</span>
+              <span className="text-3xl font-black italic leading-none">{oppAvg}</span>
+            </div>
           </div>
-          <div className="space-y-2">
-            {oppTeam.map(p => (
-              <div key={p.name} className="flex justify-between text-[10px] font-mono opacity-70">
-                <span>{p.name.toUpperCase()}</span>
-                <span className="text-red-500">R_{rawStats[p.name.toLowerCase()]?.toFixed(2)}</span>
+          <div className="grid grid-cols-1 gap-2">
+            {oppTeam.map((p) => (
+              <div key={p.name} className="flex justify-between items-center p-2 border-2 border-black bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+                <div className="flex flex-col">
+                  <span className="text-sm font-black uppercase">{p.name}</span>
+                  <span className="text-[10px] font-bold text-gray-400 leading-none">${p.cost}</span>
+                </div>
+                <div className="text-right">
+                  <span className="text-xs font-black border-2 border-black px-2 py-0.5">{(rawStats[p.name.toLowerCase()] || 0).toFixed(2)}</span>
+                </div>
               </div>
             ))}
           </div>
         </div>
       </div>
 
-      <div className="relative mb-12 py-8 bg-zinc-900 border-x-4 border-yellow-400 text-center">
-        <p className="text-xs font-black uppercase text-yellow-400 tracking-[0.5em] mb-3">Dominant Performance Detected</p>
-        <div className="text-4xl md:text-6xl font-black uppercase italic tracking-tight">
-          {winnerName}
-        </div>
-      </div>
-
-      <button 
-        onClick={() => router.push("/")} 
-        className="group relative w-full bg-white text-black py-4 font-black uppercase text-xl transition-all hover:bg-yellow-400 active:translate-y-1"
-      >
-        <span className="relative z-10">Return to Lobby</span>
-        <div className="absolute inset-0 border-2 border-white translate-x-2 translate-y-2 group-hover:translate-x-0 group-hover:translate-y-0 transition-all -z-10" />
-      </button>
-
-      <div className="mt-8 text-center text-[10px] font-black uppercase text-gray-600 tracking-tighter">
-        TIMESTAMP: {new Date().toLocaleTimeString()} // PROTOCOL_VLR_FINAL
+      {/* Bottom Action Area */}
+      <div className="p-4 border-t-4 border-black bg-gray-50">
+        <button 
+          onClick={() => router.push("/")}
+          className="w-full md:w-auto md:px-12 block mx-auto bg-black text-white py-4 font-black uppercase text-xl transition-all hover:bg-yellow-400 hover:text-black border-2 border-black active:translate-y-1"
+        >
+          Return_to_Lobby
+        </button>
       </div>
     </div>
   );

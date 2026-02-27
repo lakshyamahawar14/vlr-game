@@ -15,7 +15,7 @@ export default function ArenaLoading() {
 
         <div className="flex flex-col items-center gap-4">
           <h2 className="text-4xl md:text-6xl font-black italic uppercase tracking-tighter">
-            Arena <span className="text-red-600">Sync</span>
+            Arena <span className="text-red-600">Loading</span>
           </h2>
           
           <div className="flex items-center gap-3">

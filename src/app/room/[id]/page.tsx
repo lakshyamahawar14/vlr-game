@@ -36,6 +36,8 @@ export default function RoomPage() {
     return <RoomNotFound roomId={params.id as string} />;
   }
 
+  const isDrafting = status === "DRAFTING";
+
   return (
     <div className="min-h-screen bg-white p-4 max-w-7xl mx-auto font-mono text-black">
       <ArenaHeader 
@@ -44,16 +46,16 @@ export default function RoomPage() {
         timer={timer} 
       />
 
-      <div className="flex flex-col lg:grid lg:grid-cols-4 gap-6">
-        <TeamDisplay 
-          name={myName} 
-          value={myValue} 
-          team={team} 
-          variant="player" 
-        />
+      {isDrafting ? (
+        <div className="flex flex-col lg:grid lg:grid-cols-4 gap-6">
+          <TeamDisplay 
+            name={myName} 
+            value={myValue} 
+            team={team} 
+            variant="player" 
+          />
 
-        <div className="lg:col-span-2">
-          {status === "DRAFTING" ? (
+          <div className="lg:col-span-2">
             <DraftBoard 
               team={team} 
               oppTeam={oppTeam} 
@@ -61,24 +63,26 @@ export default function RoomPage() {
               onPick={handlePick} 
               categories={categories || {}}
             />
-          ) : (
-            <ResultScreen 
-              myName={myName} 
-              oppName={oppName} 
-              myTeam={team}
-              oppTeam={oppTeam}
-              rawStats={rawStats}
-            />
-          )}
-        </div>
+          </div>
 
-        <TeamDisplay 
-          name={oppName} 
-          value={oppValue} 
-          team={oppTeam} 
-          variant="opponent" 
-        />
-      </div>
+          <TeamDisplay 
+            name={oppName} 
+            value={oppValue} 
+            team={oppTeam} 
+            variant="opponent" 
+          />
+        </div>
+      ) : (
+        <div className="max-w-5xl mx-auto">
+          <ResultScreen 
+            myName={myName} 
+            oppName={oppName} 
+            myTeam={team}
+            oppTeam={oppTeam}
+            rawStats={rawStats}
+          />
+        </div>
+      )}
     </div>
   );
 }
