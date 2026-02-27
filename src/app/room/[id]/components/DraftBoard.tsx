@@ -41,7 +41,7 @@ export default function DraftBoard({ team, oppTeam, budget, onPick, categories }
           LOADING...
         </div>
         <p className="font-black uppercase text-xs tracking-tighter">
-          Initialising Draft Sequence
+          If this takes longer than 5 seconds, please reload
         </p>
       </div>
     );
