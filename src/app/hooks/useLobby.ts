@@ -34,6 +34,56 @@ export function useLobby() {
     await presenceChannelRef.current.track(data);
   };
 
+  const sendDuelRequest = (targetId: string) => {
+    setIsWaitingForResponse(targetId);
+    enqueue(() => trackPresence({ name: username, challenging: targetId, isQueuing }));
+  };
+
+  const cancelDuelRequest = () => {
+    setIsWaitingForResponse(null);
+    enqueue(() => trackPresence({ name: username, challenging: null, isQueuing }));
+  };
+
+  const acceptDuel = () => {
+    if (challengeStack.length === 0) return;
+    const challenger = challengeStack[0];
+    setChallengeStack([]);
+    const roomId = `match_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+    
+    enqueue(async () => {
+      const { error } = await supabase.from("room").insert([{
+        id: roomId, p1_id: challenger.id, p2_id: myId, status: "DRAFTING",
+        p1_name: challenger.name, p2_name: username,
+      }]);
+      if (!error && presenceChannelRef.current) {
+        await presenceChannelRef.current.send({
+          type: "broadcast", event: "duel_started",
+          payload: { roomId, challengerId: challenger.id, targetId: myId },
+        });
+      }
+    });
+  };
+
+  const declineDuel = () => {
+    if (challengeStack.length === 0) return;
+    const challengerId = challengeStack[0].id;
+    setChallengeStack([]);
+    enqueue(async () => {
+      if (presenceChannelRef.current) {
+        await presenceChannelRef.current.send({
+          type: "broadcast", event: "duel_declined", payload: { challengerId },
+        });
+      }
+    });
+  };
+
+  const toggleQueue = () => {
+    const next = !isQueuing;
+    setIsQueuing(next);
+    matchmakingLockRef.current = false;
+    enqueue(() => trackPresence({ name: username, challenging: isWaitingForResponse, isQueuing: next }));
+  };
+
   useEffect(() => {
     setIsMounted(true);
     const uid = localStorage.getItem("vlr_duel_id") || crypto.randomUUID();
@@ -51,7 +101,6 @@ export function useLobby() {
 
     const syncState = () => {
       const state = channel.presenceState();
-      
       const users = Object.entries(state).map(([key, value]: [string, any]) => {
         const p = value[0];
         return {
@@ -63,18 +112,13 @@ export function useLobby() {
       });
 
       setOnlineUsers(users);
-
       const me = users.find((u) => u.id === uid);
       if (me) {
         setIsQueuing(!!me.isQueuing);
         setIsWaitingForResponse(me.challenging || null);
       }
 
-      setChallengeStack(
-        users
-          .filter((u) => u.challenging === uid)
-          .map((u) => ({ id: u.id, name: u.name }))
-      );
+      setChallengeStack(users.filter((u) => u.challenging === uid).map((u) => ({ id: u.id, name: u.name })));
     };
 
     channel
@@ -83,9 +127,7 @@ export function useLobby() {
       .on("presence", { event: "leave" }, syncState)
       .on("broadcast", { event: "duel_declined" }, (payload: any) => {
         if (payload.payload.challengerId === uid) {
-          enqueue(() =>
-            trackPresence({ name: storedName, challenging: null, isQueuing })
-          );
+          enqueue(() => trackPresence({ name: username, challenging: null, isQueuing }));
         }
       })
       .on("broadcast", { event: "duel_started" }, (payload: any) => {
@@ -99,37 +141,22 @@ export function useLobby() {
         }
       });
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    return () => { supabase.removeChannel(channel); };
   }, [router]);
 
   useEffect(() => {
     if (!isQueuing || matchmakingLockRef.current) return;
-
     const other = onlineUsers.find((u) => u.isQueuing && u.id !== myId);
-    if (!other) return;
-
-    if (myId < other.id) {
+    if (other && myId < other.id) {
       matchmakingLockRef.current = true;
       const roomId = `queue_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
-
       enqueue(async () => {
-        const { error } = await supabase.from("room").insert([
-          {
-            id: roomId,
-            p1_id: myId,
-            p2_id: other.id,
-            status: "DRAFTING",
-            p1_name: username,
-            p2_name: other.name,
-          },
-        ]);
-
+        const { error } = await supabase.from("room").insert([{
+          id: roomId, p1_id: myId, p2_id: other.id, status: "DRAFTING", p1_name: username, p2_name: other.name,
+        }]);
         if (!error && presenceChannelRef.current) {
           await presenceChannelRef.current.send({
-            type: "broadcast",
-            event: "duel_started",
+            type: "broadcast", event: "duel_started",
             payload: { roomId, challengerId: myId, targetId: other.id },
           });
         }
@@ -138,20 +165,7 @@ export function useLobby() {
   }, [isQueuing, onlineUsers, myId, username]);
 
   return {
-    myId,
-    username,
-    setUsername,
-    isMounted,
-    isQueuing,
-    setIsQueuing,
-    onlineUsers,
-    challengeStack,
-    setChallengeStack,
-    isWaitingForResponse,
-    setIsWaitingForResponse,
-    presenceChannelRef,
-    matchmakingLockRef,
-    enqueue,
-    trackPresence,
+    myId, username, setUsername, isMounted, isQueuing, onlineUsers, challengeStack, isWaitingForResponse,
+    sendDuelRequest, cancelDuelRequest, acceptDuel, declineDuel, toggleQueue, trackPresence, enqueue
   };
 }
