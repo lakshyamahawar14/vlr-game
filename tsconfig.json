@@ -1,11 +1,6 @@
 {
   "compilerOptions": {
-    "baseUrl": ".",
-    "paths": {
-      "@/*": [
-        "./src/*"
-      ]
-    },
+    "target": "ES2017",
     "lib": [
       "dom",
       "dom.iterable",
@@ -27,7 +22,18 @@
         "name": "next"
       }
     ],
-    "target": "ES2017"
+    "baseUrl": ".",
+    "paths": {
+      "@/*": [
+        "./src/*"
+      ],
+      "@/hooks/*": [
+        "./src/app/hooks/*"
+      ],
+      "@/components/*": [
+        "./src/app/components/*"
+      ]
+    }
   },
   "include": [
     "next-env.d.ts",
