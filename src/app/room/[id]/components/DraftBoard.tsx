@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
 
 type Player = { name: string; cost: number };
 
@@ -13,11 +13,39 @@ interface Props {
 }
 
 export default function DraftBoard({ team, oppTeam, budget, onPick, categories }: Props) {
+  const [isLoading, setIsLoading] = useState(true);
+
   const sortedCategories = useMemo(() => {
-    return Object.entries(categories || {}).sort(
-      ([costA], [costB]) => Number(costB) - Number(costA)
-    );
+    const entries = Object.entries(categories || {});
+    return entries.sort(([costA], [costB]) => Number(costB) - Number(costA));
   }, [categories]);
+
+  useEffect(() => {
+    const hasData = Object.keys(categories || {}).length > 0;
+    
+    if (hasData) {
+      setIsLoading(false);
+    } else {
+      const timer = setTimeout(() => {
+        window.location.reload();
+      }, 5000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [categories]);
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center p-20 border-4 border-black bg-yellow-300">
+        <div className="text-4xl font-black italic animate-bounce mb-4 text-black">
+          LOADING...
+        </div>
+        <p className="font-black uppercase text-xs tracking-tighter">
+          Initialising Draft Sequence
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className={`grid grid-cols-1 md:grid-cols-2 gap-4 transition-opacity duration-500 ${team.length >= 5 ? 'opacity-40 grayscale pointer-events-none' : 'opacity-100'}`}>
@@ -31,7 +59,7 @@ export default function DraftBoard({ team, oppTeam, budget, onPick, categories }
             </div>
             
             <div className="bg-black text-white px-4 py-2 flex justify-between items-center">
-              <span className="text-xs font-black tracking-[0.3em]">Pick Catagory</span>
+              <span className="text-xs font-black tracking-[0.3em]">Pick Category</span>
               <span className="text-2xl font-black italic">${costNum}</span>
             </div>
 
