@@ -16,42 +16,46 @@ export default function PlayerLists({
 }: Props) {
   const queueMembers = useMemo(() => onlineUsers.filter((u) => u.isQueuing), [onlineUsers]);
 
-  const UserCard = ({ user, showDuelBtn = false, isQueuing = false }: { user: PresenceUser; showDuelBtn?: boolean; isQueuing?: boolean }) => (
-    <div className={`group relative p-4 border-2 border-black transition-all duration-75 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] ${
-      user.id === myId ? "bg-yellow-300" : "bg-white"
-    }`}>
-      <div className="flex justify-between items-start mb-1">
-        <div className="flex flex-col">
-          <span className="text-sm font-black uppercase italic truncate max-w-[120px]">
-            {user.name}
-          </span>
-          <div className="flex items-center gap-1">
-             <div className={`w-1.5 h-1.5 rounded-full ${isQueuing ? "bg-orange-500 animate-pulse" : "bg-green-500"}`} />
-             <p className="text-[9px] font-black text-gray-400 uppercase tracking-tighter">
-               {isQueuing ? "In Queue" : "Idle"}
-             </p>
+  const UserCard = ({ user, showDuelBtn = false, isQueuing = false }: { user: PresenceUser; showDuelBtn?: boolean; isQueuing?: boolean }) => {
+    const isMe = user.id === myId;
+    
+    return (
+      <div className={`group relative p-4 border-2 border-black transition-all duration-75 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] ${
+        isMe ? "bg-yellow-300" : "bg-white"
+      }`}>
+        <div className="flex justify-between items-start mb-1">
+          <div className="flex flex-col">
+            <span className="text-sm font-black uppercase italic truncate max-w-[120px]">
+              {user.name}
+            </span>
+            <div className="flex items-center gap-1">
+               <div className={`w-1.5 h-1.5 rounded-full ${isQueuing ? "bg-orange-500 animate-pulse" : "bg-green-500"}`} />
+               <p className="text-[9px] font-black text-gray-400 uppercase tracking-tighter">
+                 {isQueuing ? "In Queue" : "Idle"}
+               </p>
+            </div>
           </div>
-        </div>
 
-        {user.id === myId ? (
-          <span className="text-[9px] bg-black text-white px-1.5 py-0.5 font-black italic tracking-tighter">YOU</span>
-        ) : (
-          showDuelBtn && (
-            <button 
-              onClick={() => isWaitingForResponse === user.id ? onCancelDuel() : onSendDuel(user.id)} 
-              className={`text-[10px] px-3 py-1 font-black uppercase border-2 border-black transition-all ${
-                isWaitingForResponse === user.id 
-                ? "bg-red-600 text-white animate-pulse shadow-none" 
-                : "bg-white text-black hover:bg-black hover:text-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:shadow-none"
-              }`}
-            >
-              {isWaitingForResponse === user.id ? "CANCEL" : "DUEL"}
-            </button>
-          )
-        )}
+          {isMe ? (
+            <span className="text-[9px] bg-black text-white px-1.5 py-0.5 font-black italic tracking-tighter">YOU</span>
+          ) : (
+            showDuelBtn && (
+              <button 
+                onClick={() => isWaitingForResponse === user.id ? onCancelDuel() : onSendDuel(user.id)} 
+                className={`text-[10px] px-3 py-1 font-black uppercase border-2 border-black transition-all ${
+                  isWaitingForResponse === user.id 
+                  ? "bg-red-600 text-white animate-pulse shadow-none" 
+                  : "bg-white text-black hover:bg-black hover:text-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:shadow-none"
+                }`}
+              >
+                {isWaitingForResponse === user.id ? "CANCEL" : "DUEL"}
+              </button>
+            )
+          )}
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <div className="w-full flex flex-col h-full bg-gray-50">

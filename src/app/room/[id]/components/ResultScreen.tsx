@@ -1,5 +1,3 @@
-"use client";
-
 import { useRouter } from "next/navigation";
 import { useMemo } from "react";
 
@@ -26,34 +24,36 @@ export default function ResultScreen({ myName, oppName, myTeam, oppTeam, rawStat
     return oppTeam.length ? (total / oppTeam.length).toFixed(2) : "0.00";
   }, [oppTeam, rawStats]);
 
+  const myVal = parseFloat(myAvg);
+  const oppVal = parseFloat(oppAvg);
+  
+  const iWon = myVal > oppVal;
+  const oppWon = oppVal > myVal;
+
   const winnerName = useMemo(() => {
-    const myVal = parseFloat(myAvg);
-    const oppVal = parseFloat(oppAvg);
-    if (myVal > oppVal) return myName;
-    if (oppVal > myVal) return oppName;
+    if (iWon) return myName;
+    if (oppWon) return oppName;
     return "DRAW";
-  }, [myAvg, oppAvg, myName, oppName]);
+  }, [iWon, oppWon, myName, oppName]);
 
   return (
-    <div className="w-full bg-white border-4 border-black font-mono shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] flex flex-col">
-      <div className="bg-yellow-400 border-b-4 border-black p-4 flex justify-between items-center">
-        <div>
-          <h1 className="text-xl md:text-3xl font-black uppercase tracking-tight">Post-Match_Report</h1>
-          <p className="text-[10px] font-bold opacity-70">STATUS: {winnerName === "DRAW" ? "STALEMATE" : "DECISIVE_VICTORY"}</p>
-        </div>
-        <div className="text-right">
-          <p className="text-[10px] font-black uppercase text-black/60">Winner</p>
-          <p className="text-xl md:text-2xl font-black uppercase underline decoration-black decoration-2">{winnerName}</p>
-        </div>
+    <div className="w-full bg-white border-[4px] border-black font-mono shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] flex flex-col">
+      <div className="border-b-[4px] border-black p-6 flex flex-col items-center justify-center bg-[#FF9F43] text-black transition-colors">
+        <p className="text-[12px] font-black uppercase tracking-[0.3em] mb-1 opacity-90">
+          Winner
+        </p>
+        <h1 className="text-4xl md:text-6xl font-black uppercase italic tracking-tighter">
+          {winnerName}
+        </h1>
       </div>
 
-      <div className="flex flex-col md:flex-row divide-y-4 md:divide-y-0 md:divide-x-4 divide-black">
-        <div className="flex-1 p-4 md:p-6 bg-emerald-50/30">
+      <div className="flex flex-col md:flex-row divide-y-[4px] md:divide-y-0 md:divide-x-[4px] divide-black">
+        <div className={`flex-1 p-4 md:p-6 ${iWon ? "bg-emerald-50/50" : oppWon ? "bg-red-50/50" : "bg-gray-50/50"}`}>
           <div className="flex justify-between items-center mb-4 border-b-2 border-black/10 pb-2">
             <h2 className="text-lg font-black uppercase tracking-tighter">{myName}</h2>
             <div className="text-right">
-              <span className="text-[10px] block font-black text-emerald-600">AVG_RATING</span>
-              <span className="text-3xl font-black italic leading-none">{myAvg}</span>
+              <span className={`text-[10px] block font-black ${iWon ? "text-emerald-600" : oppWon ? "text-red-600" : "text-gray-600"}`}>AVG_RATING</span>
+              <span className={`text-3xl font-black italic leading-none ${iWon ? "text-emerald-600" : oppWon ? "text-red-600" : "text-black"}`}>{myAvg}</span>
             </div>
           </div>
           <div className="grid grid-cols-1 gap-2">
@@ -64,19 +64,21 @@ export default function ResultScreen({ myName, oppName, myTeam, oppTeam, rawStat
                   <span className="text-[10px] font-bold text-gray-400 leading-none">${p.cost}</span>
                 </div>
                 <div className="text-right">
-                  <span className="text-xs font-black bg-black text-white px-2 py-0.5">{(rawStats[p.name.toLowerCase()] || 0).toFixed(2)}</span>
+                  <span className={`text-xs font-black px-2 py-0.5 border-2 border-black ${iWon ? "bg-emerald-500 text-white" : oppWon ? "bg-red-500 text-white" : "bg-black text-white"}`}>
+                    {(rawStats[p.name.toLowerCase()] || 0).toFixed(2)}
+                  </span>
                 </div>
               </div>
             ))}
           </div>
         </div>
 
-        <div className="flex-1 p-4 md:p-6 bg-red-50/30">
+        <div className={`flex-1 p-4 md:p-6 ${oppWon ? "bg-emerald-50/50" : iWon ? "bg-red-50/50" : "bg-gray-50/50"}`}>
           <div className="flex justify-between items-center mb-4 border-b-2 border-black/10 pb-2">
             <h2 className="text-lg font-black uppercase tracking-tighter">{oppName}</h2>
             <div className="text-right">
-              <span className="text-[10px] block font-black text-red-600">AVG_RATING</span>
-              <span className="text-3xl font-black italic leading-none">{oppAvg}</span>
+              <span className={`text-[10px] block font-black ${oppWon ? "text-emerald-600" : iWon ? "text-red-600" : "text-gray-600"}`}>AVG_RATING</span>
+              <span className={`text-3xl font-black italic leading-none ${oppWon ? "text-emerald-600" : iWon ? "text-red-600" : "text-black"}`}>{oppAvg}</span>
             </div>
           </div>
           <div className="grid grid-cols-1 gap-2">
@@ -87,7 +89,9 @@ export default function ResultScreen({ myName, oppName, myTeam, oppTeam, rawStat
                   <span className="text-[10px] font-bold text-gray-400 leading-none">${p.cost}</span>
                 </div>
                 <div className="text-right">
-                  <span className="text-xs font-black border-2 border-black px-2 py-0.5">{(rawStats[p.name.toLowerCase()] || 0).toFixed(2)}</span>
+                  <span className={`text-xs font-black px-2 py-0.5 border-2 border-black ${oppWon ? "bg-emerald-500 text-white" : iWon ? "bg-red-500 text-white" : "bg-black text-white"}`}>
+                    {(rawStats[p.name.toLowerCase()] || 0).toFixed(2)}
+                  </span>
                 </div>
               </div>
             ))}
@@ -95,7 +99,7 @@ export default function ResultScreen({ myName, oppName, myTeam, oppTeam, rawStat
         </div>
       </div>
 
-      <div className="p-4 border-t-4 border-black bg-gray-50">
+      <div className="p-4 border-t-[4px] border-black bg-gray-50">
         <button 
           onClick={() => router.push("/")}
           className="w-full md:w-auto md:px-12 block mx-auto bg-black text-white py-4 font-black uppercase text-xl transition-all hover:bg-yellow-400 hover:text-black border-2 border-black active:translate-y-1"

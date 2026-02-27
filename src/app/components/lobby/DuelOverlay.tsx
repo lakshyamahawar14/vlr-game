@@ -2,12 +2,14 @@
 
 interface Props {
   challengeStack: { id: string; name: string }[];
-  onAccept: () => void;
-  onDecline: () => void;
+  onAccept: (challenger: { id: string; name: string }) => void;
+  onDecline: (challengerId: string) => void;
 }
 
 export default function DuelOverlay({ challengeStack, onAccept, onDecline }: Props) {
   if (challengeStack.length === 0) return null;
+
+  const currentChallenge = challengeStack[0];
 
   return (
     <div className="absolute inset-0 z-50 bg-black flex flex-col items-center justify-center p-8 overflow-hidden">
@@ -22,13 +24,13 @@ export default function DuelOverlay({ challengeStack, onAccept, onDecline }: Pro
           Inbound Challenge ({challengeStack.length})
         </p>
         <h3 className="text-4xl md:text-5xl font-black uppercase italic text-white tracking-tighter leading-none break-all">
-          {challengeStack[0].name}
+          {currentChallenge.name}
         </h3>
       </div>
 
       <div className="flex flex-col gap-4 w-full max-w-xs relative">
         <button 
-          onClick={onAccept} 
+          onClick={() => onAccept(currentChallenge)} 
           className="relative group bg-white text-black py-5 text-xl font-black uppercase transition-all hover:-translate-y-1 hover:bg-emerald-400 active:translate-y-0"
         >
           <span className="relative z-10 flex items-center justify-center gap-2">
@@ -38,7 +40,7 @@ export default function DuelOverlay({ challengeStack, onAccept, onDecline }: Pro
         </button>
 
         <button 
-          onClick={onDecline} 
+          onClick={() => onDecline(currentChallenge.id)} 
           className="py-3 text-sm font-black uppercase text-white border-2 border-white/20 hover:border-red-600 hover:text-red-600 transition-colors"
         >
           Decline

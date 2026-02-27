@@ -14,7 +14,7 @@ export type PresenceUser = {
 export function useLobby() {
   const router = useRouter();
   const [myId, setMyId] = useState<string>("");
-  const [username, setUsername] = useState<string>("YOU");
+  const [username, setUsername] = useState<string>("");
   const [isMounted, setIsMounted] = useState(false);
   const [isQueuing, setIsQueuing] = useState(false);
   const [onlineUsers, setOnlineUsers] = useState<PresenceUser[]>([]);
@@ -30,7 +30,7 @@ export function useLobby() {
   };
 
   const trackPresence = async (data: { name: string; challenging: string | null; isQueuing: boolean }) => {
-    if (!presenceChannelRef.current) return;
+    if (!presenceChannelRef.current || !data.name || data.name === "YOU") return;
     await presenceChannelRef.current.track(data);
   };
 
@@ -51,13 +51,21 @@ export function useLobby() {
     const roomId = `match_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
     
     enqueue(async () => {
+      const actualName = localStorage.getItem("vlr_duel_username") || username;
       const { error } = await supabase.from("room").insert([{
-        id: roomId, p1_id: challenger.id, p2_id: myId, status: "DRAFTING",
-        p1_name: challenger.name, p2_name: username,
+        id: roomId, 
+        p1_id: challenger.id, 
+        p2_id: myId, 
+        status: "DRAFTING",
+        p1_name: challenger.name, 
+        p2_name: actualName,
+        p1_budget: 100,
+        p2_budget: 100
       }]);
       if (!error && presenceChannelRef.current) {
         await presenceChannelRef.current.send({
-          type: "broadcast", event: "duel_started",
+          type: "broadcast", 
+          event: "duel_started",
           payload: { roomId, challengerId: challenger.id, targetId: myId },
         });
       }
@@ -105,7 +113,7 @@ export function useLobby() {
         const p = value[0];
         return {
           id: key,
-          name: p?.name || "Unknown",
+          name: p?.name && p.name !== "YOU" ? p.name : "Anonymous",
           challenging: p?.challenging ?? null,
           isQueuing: !!p?.isQueuing,
         };
@@ -127,7 +135,7 @@ export function useLobby() {
       .on("presence", { event: "leave" }, syncState)
       .on("broadcast", { event: "duel_declined" }, (payload: any) => {
         if (payload.payload.challengerId === uid) {
-          enqueue(() => trackPresence({ name: username, challenging: null, isQueuing }));
+          enqueue(() => trackPresence({ name: storedName, challenging: null, isQueuing }));
         }
       })
       .on("broadcast", { event: "duel_started" }, (payload: any) => {
@@ -145,18 +153,27 @@ export function useLobby() {
   }, [router]);
 
   useEffect(() => {
-    if (!isQueuing || matchmakingLockRef.current) return;
+    if (!isQueuing || matchmakingLockRef.current || !username || username === "YOU") return;
     const other = onlineUsers.find((u) => u.isQueuing && u.id !== myId);
     if (other && myId < other.id) {
       matchmakingLockRef.current = true;
       const roomId = `queue_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
       enqueue(async () => {
+        const actualName = localStorage.getItem("vlr_duel_username") || username;
         const { error } = await supabase.from("room").insert([{
-          id: roomId, p1_id: myId, p2_id: other.id, status: "DRAFTING", p1_name: username, p2_name: other.name,
+          id: roomId, 
+          p1_id: myId, 
+          p2_id: other.id, 
+          status: "DRAFTING", 
+          p1_name: actualName, 
+          p2_name: other.name,
+          p1_budget: 100,
+          p2_budget: 100
         }]);
         if (!error && presenceChannelRef.current) {
           await presenceChannelRef.current.send({
-            type: "broadcast", event: "duel_started",
+            type: "broadcast", 
+            event: "duel_started",
             payload: { roomId, challengerId: myId, targetId: other.id },
           });
         }

@@ -1,5 +1,3 @@
-"use client";
-
 type Player = { name: string; cost: number };
 
 interface Props {

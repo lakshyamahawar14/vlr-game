@@ -1,5 +1,3 @@
-"use client";
-
 export default function ArenaLoading() {
   return (
     <div className="min-h-screen bg-white flex flex-col items-center justify-center font-mono overflow-hidden relative">
