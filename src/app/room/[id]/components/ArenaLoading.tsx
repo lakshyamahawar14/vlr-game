@@ -11,10 +11,14 @@ export default function ArenaLoading() {
           <div className="absolute inset-0 bg-red-600 animate-loading-scan" />
         </div>
 
-        <div className="flex flex-col items-center gap-4">
+        <div className="flex flex-col items-center gap-4 text-center">
           <h2 className="text-4xl md:text-6xl font-black italic uppercase tracking-tighter">
             Loading <span className="text-red-600">Duel</span>
           </h2>
+
+          <p className="text-[15px] md:text-xs font-bold uppercase tracking-wider text-gray-500">
+            If this takes longer than 5 seconds, please reload
+          </p>
           
           <div className="flex items-center gap-3">
             <span className="w-2 h-2 bg-black rounded-full animate-bounce [animation-delay:-0.3s]" />
