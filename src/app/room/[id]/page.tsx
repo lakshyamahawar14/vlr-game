@@ -6,6 +6,7 @@ import TeamDisplay from "./components/TeamDisplay";
 import DraftBoard from "./components/DraftBoard";
 import ResultScreen from "./components/ResultScreen";
 import RoomNotFound from "./components/RoomNotFound";
+import ArenaLoading from "./components/ArenaLoading"; // New Import
 
 export default function RoomPage() {
   const {
@@ -25,11 +26,7 @@ export default function RoomPage() {
     handlePick
   } = useRoom();
 
-  if (!isMounted || isLoading) return (
-    <div className="min-h-screen bg-white flex items-center justify-center font-mono text-2xl font-black italic uppercase">
-      Syncing Arena...
-    </div>
-  );
+  if (!isMounted || isLoading) return <ArenaLoading />;
 
   if (!roomExists) return <RoomNotFound roomId={params.id as string} />;
 

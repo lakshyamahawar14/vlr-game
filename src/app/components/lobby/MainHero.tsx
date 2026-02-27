@@ -28,17 +28,15 @@ export default function MainHero({
 
   return (
     <div className="flex-1 flex flex-col items-center justify-center p-8 bg-white relative overflow-hidden min-h-full w-full">
-      {/* Centered Background Animated Text */}
-      <div className="absolute inset-0 z-0 opacity-[0.03] pointer-events-none select-none flex flex-col items-center justify-center animate-diagonal-slow">
-        <span className="text-[22vw] font-black uppercase whitespace-nowrap leading-[0.75]">
+      <div className="absolute inset-0 z-0 opacity-[0.03] pointer-events-none select-none flex flex-col items-center justify-center">
+        <span className="text-[30vw] font-black uppercase whitespace-nowrap leading-[0.7]">
           VLR
         </span>
-        <span className="text-[22vw] font-black uppercase whitespace-nowrap leading-[0.75]">
+        <span className="text-[30vw] font-black uppercase whitespace-nowrap leading-[0.7]">
           VLR
         </span>
       </div>
 
-      {/* User Profile Section */}
       <div className="relative z-20 mb-12 flex flex-col items-center gap-2">
         <p className="text-xs font-black uppercase text-gray-400 tracking-widest">User Profile</p>
         <div className="flex items-center gap-3 border-b-2 border-black pb-2">
@@ -65,7 +63,6 @@ export default function MainHero({
         <p className="text-[10px] font-black uppercase text-gray-300">{`UID: ${myId.slice(0, 8)}`}</p>
       </div>
 
-      {/* Main Branding Section */}
       <div className="relative z-10 flex flex-col items-center">
         <div className="relative mb-2">
           <h1 className="text-7xl md:text-9xl font-black uppercase tracking-tighter italic text-center leading-none">
@@ -83,7 +80,6 @@ export default function MainHero({
           <div className="h-[2px] w-8 bg-black" />
         </div>
 
-        {/* Action Button */}
         <div className="relative w-full max-w-xs group">
           {isQueuing && (
             <div className="absolute inset-0 bg-red-600 animate-ping opacity-20 blur-xl" />
@@ -112,17 +108,6 @@ export default function MainHero({
           </p>
         </div>
       </div>
-
-      <style jsx>{`
-        @keyframes diagonalMoveSlow {
-          0% { transform: translate(-2%, -2%); }
-          50% { transform: translate(2%, 2%); }
-          100% { transform: translate(-2%, -2%); }
-        }
-        .animate-diagonal-slow {
-          animation: diagonalMoveSlow 12s ease-in-out infinite;
-        }
-      `}</style>
     </div>
   );
 }

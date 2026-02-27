@@ -1,3 +1,5 @@
+"use client";
+
 const CATEGORIES = {
   50: ["aspas", "TenZ", "ZywOo"],
   40: ["Derke", "Leo", "Chronicle"],
@@ -17,11 +19,19 @@ interface Props {
 
 export default function DraftBoard({ team, oppTeam, budget, onPick }: Props) {
   return (
-    <div className={`grid grid-cols-1 md:grid-cols-2 gap-3 ${team.length >= 5 ? 'opacity-40 grayscale pointer-events-none' : 'opacity-100'}`}>
+    <div className={`grid grid-cols-1 md:grid-cols-2 gap-4 ${team.length >= 5 ? 'opacity-40 grayscale pointer-events-none' : 'opacity-100'}`}>
       {Object.entries(CATEGORIES).sort((a, b) => Number(b[0]) - Number(a[0])).map(([cost, players]) => (
-        <div key={cost} className="border-2 border-black p-2 bg-white">
-          <div className="bg-black text-white text-center mb-3 font-black italic uppercase py-1 text-lg md:text-xl">${cost}</div>
-          <div className="space-y-1.5">
+        <div key={cost} className="border-4 border-black bg-gray-50 flex flex-col relative overflow-hidden">
+          <div className="absolute top-0 right-0 p-1">
+            <div className="w-1.5 h-1.5 bg-black rotate-45" />
+          </div>
+          
+          <div className="bg-black text-white px-4 py-2 flex justify-between items-center">
+            <span className="text-xs font-black tracking-[0.3em]">TIER_PROTOCOL</span>
+            <span className="text-2xl font-black italic">${cost}</span>
+          </div>
+
+          <div className="p-3 space-y-2">
             {players.map((p) => {
               const costNum = parseInt(cost);
               const isPicked = team.some(tp => tp.name === p);
@@ -35,13 +45,44 @@ export default function DraftBoard({ team, oppTeam, budget, onPick }: Props) {
                   key={p} 
                   onClick={() => onPick(p, costNum)} 
                   disabled={isDisabled} 
-                  className={`w-full text-left p-3 font-black text-sm border-2 uppercase transition-all ${isPicked ? 'bg-green-400 border-black shadow-none translate-x-0.5 translate-y-0.5' : isOpponentPicked ? 'bg-red-400 border-black opacity-50 cursor-not-allowed' : !canAfford ? 'bg-gray-100 border-gray-300 text-gray-400 cursor-not-allowed opacity-60' : isRosterFull ? 'bg-white border-black opacity-50 cursor-not-allowed' : 'bg-white border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] hover:bg-yellow-50 hover:translate-x-0.5 hover:translate-y-0.5 active:shadow-none'}`}
+                  className={`
+                    group relative w-full text-left p-4 font-black uppercase transition-all border-2 
+                    ${isPicked 
+                      ? 'bg-emerald-400 border-black translate-x-1 translate-y-1 shadow-none' 
+                      : isOpponentPicked 
+                      ? 'bg-gray-200 border-black/20 opacity-60 cursor-not-allowed grayscale' 
+                      : !canAfford 
+                      ? 'bg-white border-dashed border-gray-300 text-gray-300 cursor-not-allowed' 
+                      : 'bg-white border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:bg-yellow-300 hover:translate-x-1 hover:translate-y-1 hover:shadow-none'
+                    }
+                  `}
                 >
-                  <div className="flex justify-between items-center">
-                    <span>{p}</span>
-                    {isOpponentPicked && <span className="text-[9px] bg-black text-white px-1">TAKEN</span>}
-                    {!canAfford && !isPicked && !isOpponentPicked && <span className="text-[9px] text-red-500">MAX BUDGET</span>}
+                  <div className="flex justify-between items-center relative z-10">
+                    <div className="flex flex-col">
+                      <span className="text-xs text-gray-400 font-black tracking-widest leading-none mb-1">AGENT</span>
+                      <span className="text-lg leading-none tracking-tighter">{p}</span>
+                    </div>
+
+                    {isOpponentPicked ? (
+                      <div className="bg-red-600 text-white text-[10px] px-2 py-1 rotate-12 border border-black">
+                        EXFILTRATED
+                      </div>
+                    ) : isPicked ? (
+                      <div className="bg-black text-white text-[10px] px-2 py-1 border border-black">
+                        SECURED
+                      </div>
+                    ) : !canAfford && (
+                      <div className="text-[10px] text-red-600 font-black animate-pulse">
+                        LOW_FUNDS
+                      </div>
+                    )}
                   </div>
+                  
+                  {!isDisabled && (
+                    <div className="absolute bottom-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="w-2 h-2 bg-black" />
+                    </div>
+                  )}
                 </button>
               );
             })}
