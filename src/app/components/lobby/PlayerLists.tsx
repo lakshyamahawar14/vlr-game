@@ -1,3 +1,6 @@
+"use client";
+
+import { useMemo } from "react";
 import { PresenceUser } from "@/app/hooks/useLobby";
 
 interface Props {
@@ -15,10 +18,10 @@ export default function PlayerLists({
   onSendDuel, 
   onCancelDuel 
 }: Props) {
-  const queueMembers = onlineUsers.filter((u) => u.isQueuing);
+  const queueMembers = useMemo(() => onlineUsers.filter((u) => u.isQueuing), [onlineUsers]);
 
   const UserCard = ({ user, showDuelBtn = false }: { user: PresenceUser; showDuelBtn?: boolean }) => (
-    <div className={`p-4 border-2 border-black transition-colors ${user.id === myId ? "bg-yellow-300" : "bg-white hover:bg-gray-100"}`}>
+    <div className={`p-4 border-2 border-black transition-colors duration-75 ${user.id === myId ? "bg-yellow-300" : "bg-white hover:bg-gray-100"}`}>
       <div className="flex justify-between items-start mb-1">
         <span className="text-sm font-black uppercase italic truncate max-w-[120px]">{user.name}</span>
         {user.id === myId ? (
@@ -75,15 +78,9 @@ export default function PlayerLists({
       </div>
 
       <style jsx global>{`
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 4px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: transparent;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: #000;
-        }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #000; }
       `}</style>
     </div>
   );

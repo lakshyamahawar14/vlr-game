@@ -14,7 +14,7 @@ export type PresenceUser = {
 export function useLobby() {
   const router = useRouter();
   const [myId, setMyId] = useState<string>("");
-  const [username, setUsername] = useState<string>("");
+  const [username, setUsername] = useState<string>("YOU");
   const [isMounted, setIsMounted] = useState(false);
   const [isQueuing, setIsQueuing] = useState(false);
   const [onlineUsers, setOnlineUsers] = useState<PresenceUser[]>([]);
@@ -51,8 +51,9 @@ export function useLobby() {
 
     const syncState = () => {
       const state = channel.presenceState();
-      const users: PresenceUser[] = Object.keys(state).map((key) => {
-        const p = state[key][0] as any;
+      
+      const users = Object.entries(state).map(([key, value]: [string, any]) => {
+        const p = value[0];
         return {
           id: key,
           name: p?.name || "Unknown",
