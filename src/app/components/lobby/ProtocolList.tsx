@@ -1,6 +1,6 @@
-export default function ProtocolList() {
-  const serverId = "Oceania (Sydney) ap-southeast-2";
+import { memo } from "react";
 
+const ProtocolList = memo(function ProtocolList() {
   const protocols = [
     { 
       id: "01", 
@@ -34,16 +34,14 @@ export default function ProtocolList() {
 
   return (
     <aside className="w-full lg:w-80 h-full lg:h-screen flex flex-col bg-white border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
-      {/* Header - Styled same as PlayerLists */}
       <div className="p-4 border-b-4 border-black bg-indigo-600">
         <div className="flex justify-between items-center">
-          <h2 className="text-xl font-black uppercase text-white leading-none">
+          <h2 className="text-xl font-black uppercase text-white leading-none tracking-tight">
             Game Instructions
           </h2>
         </div>
       </div>
       
-      {/* List Area */}
       <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-white">
         <ul className="space-y-3">
           {protocols.map((p) => (
@@ -58,16 +56,8 @@ export default function ProtocolList() {
           ))}
         </ul>
       </div>
-
-      {/* Footer - Light Yellow Server Status */}
-      <div className="p-4 border-t-4 border-black bg-yellow-200">
-        <div className="flex flex-col">
-          <span className="text-[10px] font-black uppercase text-black">Server Status</span>
-          <p className="text-[11px] font-bold text-black uppercase truncate">
-            {serverId}
-          </p>
-        </div>
-      </div>
     </aside>
   );
-}
+});
+
+export default ProtocolList;
