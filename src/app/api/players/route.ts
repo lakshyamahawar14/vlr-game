@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 const DEFAULT_POOL = {
   pool: [
@@ -12,13 +12,22 @@ const DEFAULT_POOL = {
     { cost: 10, players: ["Rb", "Zest", "Benkai", "Foxy9", "Nats", "Redgar"] }
   ],
   rawStats: {
-    "aspas": 1, "tenz": 1, "zywoo": 1, "chronicle": 1, "leo": 1, "sacy": 1,
-    "derke": 1, "cned": 1, "alfajer": 1, "less": 1, "yay": 1, "cryocells": 1,
-    "boaster": 1, "saadhak": 1, "fns": 1, "mako": 1, "p0ceit": 1, "zellsis": 1,
-    "mazino": 1, "klaus": 1, "buzz": 1, "stax": 1, "scary": 1, "ardiis": 1,
-    "rb": 1, "zest": 1, "benkai": 1, "foxy9": 1, "nats": 1, "redgar": 1
+    aspas: 1, tenz: 1, zywoo: 1, chronicle: 1, leo: 1, sacy: 1,
+    derke: 1, cned: 1, alfajer: 1, less: 1, yay: 1, cryocells: 1,
+    boaster: 1, saadhak: 1, fns: 1, mako: 1, p0ceit: 1, zellsis: 1,
+    mazino: 1, klaus: 1, buzz: 1, stax: 1, scary: 1, ardiis: 1,
+    rb: 1, zest: 1, benkai: 1, foxy9: 1, nats: 1, redgar: 1
   }
 };
+
+function shuffle<T>(arr: T[]) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
 
 export async function GET() {
   try {
@@ -30,17 +39,15 @@ export async function GET() {
       throw new Error("DB_ERROR");
     }
 
-    const shuffledPlayers = [...allPlayers].sort(() => 0.5 - Math.random());
+    const shuffledPlayers = shuffle(allPlayers);
 
-    const poolArray = [
+    const pool = shuffle([
       { cost: 30, players: shuffledPlayers.slice(0, 3).map(p => p.name) },
       { cost: 25, players: shuffledPlayers.slice(3, 6).map(p => p.name) },
       { cost: 20, players: shuffledPlayers.slice(6, 9).map(p => p.name) },
       { cost: 15, players: shuffledPlayers.slice(9, 12).map(p => p.name) },
       { cost: 10, players: shuffledPlayers.slice(12, 15).map(p => p.name) }
-    ];
-
-    const pool = poolArray.sort(() => Math.random() - 0.5);
+    ]);
 
     const rawStats = allPlayers.reduce((acc, p) => {
       acc[p.name.toLowerCase()] = p.rating;
@@ -48,12 +55,10 @@ export async function GET() {
     }, {} as Record<string, number>);
 
     return NextResponse.json({ pool, rawStats });
-
-  } catch (err) {
-    const shuffledDefault = [...DEFAULT_POOL.pool].sort(() => Math.random() - 0.5);
-    return NextResponse.json({ 
-      pool: shuffledDefault, 
-      rawStats: DEFAULT_POOL.rawStats 
+  } catch {
+    return NextResponse.json({
+      pool: shuffle(DEFAULT_POOL.pool),
+      rawStats: DEFAULT_POOL.rawStats
     });
   }
 }
