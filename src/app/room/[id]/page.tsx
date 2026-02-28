@@ -1,9 +1,7 @@
 "use client";
 
 import { useRoom } from "./hooks/useRoom";
-import ArenaHeader from "./components/ArenaHeader";
-import TeamDisplay from "./components/TeamDisplay";
-import DraftBoard from "./components/DraftBoard";
+import Arena from "./components/Arena";
 import ResultScreen from "./components/ResultScreen";
 import RoomNotFound from "./components/RoomNotFound";
 import ArenaLoading from "./components/ArenaLoading";
@@ -21,15 +19,13 @@ export default function RoomPage() {
     budget,
     timer,
     status,
-    myValue,
-    oppValue,
     handlePick,
     categories,
     rawStats,
-    oppLeft,
+    oppLeft
   } = useRoom();
 
-  if (!isMounted || isLoading) {
+  if (!isMounted || isLoading || status === null) {
     return <ArenaLoading />;
   }
 
@@ -37,60 +33,10 @@ export default function RoomPage() {
     return <RoomNotFound roomId={params.id as string} />;
   }
 
-  const isWaiting = status === "WAITING";
-  const isDrafting = status === "DRAFTING";
-  const isEnded = status === "ENDED";
-
-  return (
-    <div className="min-h-screen bg-white p-4 max-w-7xl mx-auto font-mono text-black">
-      <ArenaHeader
-        budget={budget}
-        status={status}
-        timer={timer}
-        oppLeft={oppLeft}
-      />
-
-      {isWaiting && (
-        <div className="flex items-center justify-center min-h-[60vh]">
-          <ArenaLoading />
-        </div>
-      )}
-
-      {isDrafting && (
-        <div className="flex flex-col lg:grid lg:grid-cols-4 gap-6">
-          <div className="order-1 lg:order-2 lg:col-span-2">
-            <DraftBoard
-              team={team}
-              oppTeam={oppTeam}
-              budget={budget}
-              onPick={handlePick}
-              categories={Array.isArray(categories) ? categories : []}
-              status={status}
-            />
-          </div>
-
-          <div className="order-2 lg:order-1">
-            <TeamDisplay
-              name={myName}
-              value={myValue}
-              team={team}
-              variant="player"
-            />
-          </div>
-
-          <div className="order-3 lg:order-3">
-            <TeamDisplay
-              name={oppName}
-              value={oppValue}
-              team={oppTeam}
-              variant="opponent"
-            />
-          </div>
-        </div>
-      )}
-
-      {isEnded && (
-        <div className="max-w-5xl mx-auto">
+  if (status === "ENDED") {
+    return (
+      <div className="min-h-screen bg-white p-4 font-mono text-black flex flex-col items-center justify-center">
+        <div className="w-full max-w-5xl">
           <ResultScreen
             myName={myName}
             oppName={oppName}
@@ -99,7 +45,30 @@ export default function RoomPage() {
             rawStats={rawStats}
           />
         </div>
-      )}
-    </div>
-  );
+      </div>
+    );
+  }
+
+  if (status === "WAITING" || status === "DRAFTING") {
+    return (
+      <div className="min-h-screen bg-white p-4 font-mono text-black flex flex-col items-center justify-center">
+        <div className="w-full max-w-7xl">
+          <Arena
+            myName={myName}
+            oppName={oppName}
+            team={team}
+            oppTeam={oppTeam}
+            budget={budget}
+            timer={timer}
+            status={status}
+            handlePick={handlePick}
+            categories={Array.isArray(categories) ? categories : []}
+            oppLeft={oppLeft}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  return <ArenaLoading />;
 }

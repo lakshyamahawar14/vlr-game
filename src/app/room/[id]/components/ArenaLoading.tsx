@@ -31,7 +31,7 @@ export default function ArenaLoading() {
 
           <div className="h-6">
             {showReload && (
-              <p className="text-[15px] md:text-xs font-bold uppercase tracking-wider text-red-600">
+              <p className="text-[15px] md:text-xs font-bold uppercase tracking-wider text-red-600 animate-pulse">
                 Please reload the page
               </p>
             )}

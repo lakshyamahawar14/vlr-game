@@ -20,7 +20,7 @@ export default function ArenaHeader({ budget, status, timer, oppLeft }: Props) {
   };
 
   return (
-    <div className="mb-6">
+    <div className="">
       <div
         className={`
           flex flex-col md:grid border-[4px] border-black bg-white
