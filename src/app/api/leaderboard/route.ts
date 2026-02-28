@@ -24,15 +24,25 @@ export async function GET(request: Request) {
       return NextResponse.json([]);
     }
 
-    const leaderboard = data.map((player, index) => ({
-      rank: rangeStart + index + 1,
-      userId: player.userId,
-      username: player.username || "Unknown Player",
-      matches: player.matches || 0,
-      wins: player.wins || 0,
-      loses: player.loses || 0,
-      winRate: player.winRate || 0
-    }));
+    const leaderboard = data.map((player, index) => {
+      const wins = Number(player.wins) || 0;
+      const loses = Number(player.loses) || 0;
+      const draws = Number(player.draws) || 0;
+      const avgScore = Number(player.avgScore) || 0;
+      const winRate = Number(player.winRate) || 0;
+      
+      return {
+        rank: rangeStart + index + 1,
+        userId: player.userId,
+        username: player.username || "Unknown Player",
+        matches: wins + loses + draws,
+        wins: wins,
+        loses: loses,
+        draws: draws,
+        avgScore: avgScore,
+        winRate: winRate
+      };
+    });
 
     return NextResponse.json(leaderboard);
 

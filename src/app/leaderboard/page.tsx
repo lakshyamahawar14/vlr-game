@@ -11,6 +11,8 @@ interface LeaderboardEntry {
   matches: number;
   wins: number;
   loses: number;
+  draws: number;
+  avgScore: number;
   winRate: number;
 }
 
@@ -21,13 +23,18 @@ function LeaderboardContent() {
   
   const [data, setData] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
-  const [hasMore, setHasMore] = useState(true);
+  const [hasMore, setHasMore] = useState(false);
+  const [localUserId, setLocalUserId] = useState<string | null>(null);
   const PAGE_LIMIT = 25;
+
+  useEffect(() => {
+    const storedId = localStorage.getItem("vlr_duel_id");
+    if (storedId) setLocalUserId(storedId);
+  }, []);
 
   useEffect(() => {
     async function fetchLeaderboard() {
       setLoading(true);
-      setData([]); 
       try {
         const res = await fetch(`/api/leaderboard?page=${page}`);
         const json = await res.json();
@@ -35,9 +42,13 @@ function LeaderboardContent() {
         if (Array.isArray(json)) {
           setData(json);
           setHasMore(json.length === PAGE_LIMIT);
+        } else {
+          setData([]);
+          setHasMore(false);
         }
       } catch (err) {
         setData([]);
+        setHasMore(false);
       } finally {
         setLoading(false);
       }
@@ -73,36 +84,48 @@ function LeaderboardContent() {
             <thead className="sticky top-0 z-10">
               <tr className="bg-[#A3E635] border-b-4 border-black text-[10px] md:text-xs uppercase font-black whitespace-nowrap">
                 <th className="px-3 py-2 w-[50px] text-center border-r-4 border-black">#</th>
-                <th className="px-3 py-2 w-[100px] border-r-4 border-black">UID</th>
-                <th className="px-3 py-2 border-r-4 border-black min-w-[150px]">Player</th>
-                <th className="px-3 py-2 w-[130px] text-center border-r-4 border-black">Total Matches</th>
-                <th className="px-3 py-2 w-[80px] text-center border-r-4 border-black">W-L</th>
+                <th className="px-3 py-2 w-[110px] border-r-4 border-black">USER ID</th>
+                <th className="px-3 py-2 border-r-4 border-black min-w-[180px]">Player</th>
+                <th className="px-3 py-2 w-[100px] text-center border-r-4 border-black">Matches</th>
+                <th className="px-3 py-2 w-[100px] text-center border-r-4 border-black">W-L-D</th>
+                <th className="px-3 py-2 w-[100px] text-center border-r-4 border-black">Avg Score</th>
                 <th className="px-3 py-2 w-[90px] text-right">Win Rate</th>
               </tr>
             </thead>
             <tbody className="text-xs md:text-sm font-bold">
-              {!loading && data.map((player) => (
-                <tr key={player.userId} className="border-b-2 border-black hover:bg-[#FDE047] transition-colors">
-                  <td className="px-3 py-1.5 text-center border-r-4 border-black italic">
-                    {player.rank}
-                  </td>
-                  <td className="px-3 py-1.5 font-mono text-[9px] border-r-4 border-black text-gray-600">
-                    {player.userId?.slice(0, 8)}
-                  </td>
-                  <td className="px-3 py-1.5 uppercase truncate border-r-4 border-black min-w-[150px]">
-                    {player.username}
-                  </td>
-                  <td className="px-3 py-1.5 text-center border-r-4 border-black">
-                    {player.matches}
-                  </td>
-                  <td className="px-3 py-1.5 text-center border-r-4 border-black whitespace-nowrap">
-                    {player.wins}-{player.loses}
-                  </td>
-                  <td className="px-3 py-1.5 text-right font-black text-blue-600">
-                    {player.winRate}%
-                  </td>
-                </tr>
-              ))}
+              {!loading && data.map((player) => {
+                const isMe = player.userId === localUserId;
+                return (
+                  <tr 
+                    key={player.userId} 
+                    className={`border-b-2 border-black ${
+                      isMe ? "bg-[#FFD700]" : "bg-white"
+                    }`}
+                  >
+                    <td className="px-3 py-1.5 text-center border-r-4 border-black italic">
+                      {player.rank}
+                    </td>
+                    <td className={`px-3 py-1.5 font-mono text-[9px] border-r-4 border-black uppercase ${isMe ? "text-black" : "text-gray-600"}`}>
+                      {player.userId?.slice(0, 8).toUpperCase()}
+                    </td>
+                    <td className="px-3 py-1.5 uppercase truncate border-r-4 border-black min-w-[180px]">
+                      {player.username} {isMe ? "(YOU)" : ""}
+                    </td>
+                    <td className="px-3 py-1.5 text-center border-r-4 border-black">
+                      {player.matches}
+                    </td>
+                    <td className="px-3 py-1.5 text-center border-r-4 border-black whitespace-nowrap">
+                      {player.wins}-{player.loses}-{player.draws}
+                    </td>
+                    <td className="px-3 py-1.5 text-center border-r-4 border-black">
+                      {player.avgScore.toFixed(2)}
+                    </td>
+                    <td className={`px-3 py-1.5 text-right font-black ${isMe ? "text-black" : "text-blue-600"}`}>
+                      {player.winRate}%
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
 
