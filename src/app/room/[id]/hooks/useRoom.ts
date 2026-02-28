@@ -147,7 +147,6 @@ export function useRoom() {
             .update({ 
               categories: vlr.pool,
               raw_stats: vlr.rawStats,
-              draft_start_at: new Date().toISOString(),
               p1_joined: true
             })
             .eq("id", roomId)

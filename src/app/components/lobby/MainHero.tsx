@@ -45,11 +45,15 @@ const MainHero = memo(function MainHero({
           <div className="absolute -bottom-2 -right-2 w-8 h-8 border-b-8 border-r-8 border-black" />
 
           <h1 className="text-7xl md:text-9xl font-black uppercase tracking-tighter text-center leading-none">
+            VLR <span className="text-indigo-600">DUEL</span>
+          </h1>
+
+          {/* <h1 className="text-7xl md:text-9xl font-black uppercase tracking-tighter text-center leading-none">
             NOT <span className="text-indigo-600">WORKING</span>
-          </h1>
-          <h1 className="text-7xl md:text-9xl font-black uppercase tracking-tighter text-center leading-none">
+          </h1> */}
+          {/* <h1 className="text-7xl md:text-9xl font-black uppercase tracking-tighter text-center leading-none">
             IN <span className="text-indigo-600">MAINTENANCE</span>
-          </h1>
+          </h1> */}
         </div>
 
         <div className="flex items-center gap-4 mb-16">
