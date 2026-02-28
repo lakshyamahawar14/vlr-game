@@ -44,25 +44,25 @@ export default function DraftBoard({ team, oppTeam, budget, onPick, categories }
                     onClick={() => onPick(p, costNum)} 
                     disabled={isDisabled} 
                     className={`
-                      relative w-full text-left px-3 py-2 font-black uppercase transition-all border
+                      relative w-full text-left px-3 py-[10px] font-black uppercase transition-colors border
                       ${isPicked 
-                        ? 'bg-emerald-400 border-black translate-x-1 translate-y-1' 
+                        ? 'bg-emerald-400 border-black' 
                         : isOpponentPicked 
                         ? 'bg-gray-100 border-gray-200 opacity-50 cursor-not-allowed grayscale' 
                         : !canAfford 
                         ? 'bg-white border-dashed border-gray-200 text-gray-300 cursor-not-allowed' 
-                        : 'bg-white border-black hover:bg-yellow-300 hover:translate-x-1 hover:translate-y-1'
+                        : 'bg-white border-black hover:bg-yellow-300'
                       }
                     `}
                   >
-                    <div className="flex justify-between items-center relative z-10">
+                    <div className="flex justify-between items-center relative z-10 h-3">
                       <span className="text-sm tracking-tighter leading-none">{p}</span>
                       {isOpponentPicked ? (
-                        <div className="bg-red-600 text-white text-[8px] px-1.5 py-0.5 border border-black">TAKEN</div>
+                        <div className="bg-red-600 text-white text-[8px] px-1.5 py-0.5 border border-black leading-none">TAKEN</div>
                       ) : isPicked ? (
-                        <div className="bg-black text-white text-[8px] px-1.5 py-0.5 border border-black">PICKED</div>
+                        <div className="bg-black text-white text-[8px] px-1.5 py-0.5 border border-black leading-none">PICKED</div>
                       ) : !canAfford && (
-                        <div className="text-[8px] text-red-600 font-black animate-pulse">LOW BUDGET</div>
+                        <div className="text-[8px] text-red-600 font-black leading-none">LOW BUDGET</div>
                       )}
                     </div>
                   </button>
