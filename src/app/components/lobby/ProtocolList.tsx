@@ -1,5 +1,5 @@
 export default function ProtocolList() {
-  const serverId = "Oceania (Sydney) ap-southeast-2"
+  const serverId = "Oceania (Sydney) ap-southeast-2";
 
   const protocols = [
     { 
@@ -24,54 +24,42 @@ export default function ProtocolList() {
     },
     { 
       id: "06", 
-      rule: "FAIR PLAY PROTOCOL: PLEASE TRY NOT TO CHEAT DURING THE GAME. Let's see if you know the BALL."
+      rule: "FAIR PLAY: PLEASE TRY NOT TO CHEAT DURING THE GAME. Let's see if you know the BALL."
     },
     { 
       id: "07", 
-      rule: "If you gets stuck while joining a match, or data is not visible, just Reload the website or queue in another match."
+      rule: "If you gets stuck while joining a match, or data is not visible, just RELOAD the website or queue in another match."
     },
   ];
 
   return (
-    <aside className="w-full lg:w-80 h-full lg:h-screen lg:sticky lg:top-0 border-b-4 lg:border-b-0 lg:border-r-4 border-black flex flex-col bg-[#FFF5F7] overflow-hidden">
-      <div className="p-6 pb-4 bg-transparent">
-        <div className="flex justify-between items-center border-b-4 border-indigo-600 pb-1">
-          <h2 className="text-xl font-black uppercase italic flex items-center gap-2 text-black">
-            <span className="w-2 h-6 bg-indigo-600 inline-block animate-pulse" />
-            Game Instructions
-          </h2>
-        </div>
+    <aside className="w-full lg:w-80 h-full lg:h-screen flex flex-col bg-white border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
+      <div className="p-4 border-b-4 border-black bg-indigo-600">
+        <h2 className="text-xl font-black uppercase italic text-white">
+          Game Instructions
+        </h2>
       </div>
       
-      <div className="flex-1 overflow-y-auto p-6 pt-0 
-        scrollbar-thin 
-        [&::-webkit-scrollbar]:w-2
-        [&::-webkit-scrollbar-track]:bg-[#FFE4E9]
-        [&::-webkit-scrollbar-thumb]:bg-[#FDA4AF]
-        [&::-webkit-scrollbar-thumb]:rounded-full
-        [&::-webkit-scrollbar-thumb]:border-2
-        [&::-webkit-scrollbar-thumb]:border-[#FFE4E9]">
-        
+      <div className="flex-1 overflow-y-auto p-6 bg-white">
         <ul className="space-y-8">
           {protocols.map((p) => (
-            <li key={p.id} className="flex gap-4 group">
-              <span className="font-black text-2xl leading-none text-indigo-600 opacity-90 group-hover:opacity-100 transition-opacity">
+            <li key={p.id} className="flex gap-4">
+              <span className="font-black text-2xl text-indigo-600">
                 {p.id}
               </span>
-              <div className="relative">
-                <p className="text-[14px] font-black uppercase leading-snug text-slate-700">
-                  {p.rule}
-                </p>
-              </div>
+              <p className="text-sm font-bold uppercase leading-tight text-black">
+                {p.rule}
+              </p>
             </li>
           ))}
         </ul>
       </div>
 
-      <div className="p-6 pt-4 mt-auto">
-        <div className="border-2 border-black p-2 bg-[#1E293B] text-white text-center shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-          <p className="text-[10px] font-black tracking-widest uppercase leading-tight">
-            SERVER : {serverId}
+      <div className="p-4 border-t-4 border-black bg-yellow-400">
+        <div className="flex flex-col">
+          <span className="text-[10px] font-black uppercase text-black">Server Status</span>
+          <p className="text-[11px] font-black text-black truncate">
+            {serverId}
           </p>
         </div>
       </div>
