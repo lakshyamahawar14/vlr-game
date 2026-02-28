@@ -2,6 +2,7 @@
 
 import { memo } from "react";
 import UserProfile from "./UserProfile";
+import Link from "next/link";
 
 interface MainHeroProps {
   myId: string;
@@ -21,8 +22,16 @@ const MainHero = memo(function MainHero({
   onSaveName 
 }: MainHeroProps) {
   return (
-    <div className="flex-1 flex flex-col items-center justify-center p-8 bg-white min-h-full w-full">
-      
+    <div className="relative flex-1 flex flex-col items-center justify-center p-8 bg-white min-h-screen w-full overflow-hidden">
+      <div className="absolute top-4 right-4 md:top-8 md:right-8 z-50">
+        <Link 
+          href="/leaderboard"
+          className="block px-4 py-2 bg-violet-600 text-white font-black uppercase text-[10px] md:text-xs border-2 border-black hover:bg-violet-700 transition-colors"
+        >
+          Leaderboard
+        </Link>
+      </div>
+
       <UserProfile 
         myId={myId} 
         username={username} 
@@ -51,7 +60,7 @@ const MainHero = memo(function MainHero({
         <div className="w-full max-w-xs flex flex-col items-center">
           <button
             onClick={onQueueAction}
-            className={`w-full py-8 text-4xl font-black uppercase border-4 border-black transition-colors duration-0 outline-none select-none ${
+            className={`w-full py-8 text-4xl font-black uppercase border-4 border-black outline-none select-none transition-colors ${
               isQueuing
                 ? "bg-red-500 text-white hover:bg-red-600"
                 : "bg-emerald-400 text-black hover:bg-emerald-500"
