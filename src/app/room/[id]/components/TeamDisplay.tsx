@@ -16,7 +16,7 @@ export default function TeamDisplay({ name, value, team, variant }: Props) {
     <div className={`lg:col-span-1 border-[4px] border-black flex flex-col ${isPlayer ? 'bg-white' : 'bg-zinc-50'}`}>
       <div className={`p-4 border-b-[4px] border-black ${isPlayer ? 'text-left' : 'text-right'}`}>
         <p className="text-[10px] font-black uppercase text-gray-400 tracking-[0.3em] mb-1">
-          {isPlayer ? "You" : "Opponent"}
+          {isPlayer ? "Your Roster" : "Opponent Roster"}
         </p>
         <h2 className="text-2xl font-black uppercase italic tracking-tighter truncate leading-tight mb-2">
           {name}
@@ -57,7 +57,7 @@ export default function TeamDisplay({ name, value, team, variant }: Props) {
               </>
             ) : (
               <div className="w-full flex justify-between items-center opacity-30">
-                <span className="text-[10px] font-black tracking-widest uppercase">Slot 0{i + 1}</span>
+                <span className="text-[10px] font-black tracking-widest uppercase">Slot {i + 1}</span>
                 <div className="w-4 h-[1px] bg-zinc-300" />
               </div>
             )}

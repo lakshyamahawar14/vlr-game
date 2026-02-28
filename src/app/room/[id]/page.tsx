@@ -50,14 +50,7 @@ export default function RoomPage() {
 
       {isDrafting ? (
         <div className="flex flex-col lg:grid lg:grid-cols-4 gap-6">
-          <TeamDisplay 
-            name={myName} 
-            value={myValue} 
-            team={team} 
-            variant="player" 
-          />
-
-          <div className="lg:col-span-2">
+          <div className="order-1 lg:order-2 lg:col-span-2">
             <DraftBoard 
               team={team} 
               oppTeam={oppTeam} 
@@ -67,12 +60,23 @@ export default function RoomPage() {
             />
           </div>
 
-          <TeamDisplay 
-            name={oppName} 
-            value={oppValue} 
-            team={oppTeam} 
-            variant="opponent" 
-          />
+          <div className="order-2 lg:order-1">
+            <TeamDisplay 
+              name={myName} 
+              value={myValue} 
+              team={team} 
+              variant="player" 
+            />
+          </div>
+
+          <div className="order-3 lg:order-3">
+            <TeamDisplay 
+              name={oppName} 
+              value={oppValue} 
+              team={oppTeam} 
+              variant="opponent" 
+            />
+          </div>
         </div>
       ) : (
         <div className="max-w-5xl mx-auto">

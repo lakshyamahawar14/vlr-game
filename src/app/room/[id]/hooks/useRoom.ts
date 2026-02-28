@@ -9,7 +9,7 @@ export type Player = { name: string; cost: number };
 export function useRoom() {
   const params = useParams();
   const [myId, setMyId] = useState<string | null>(null);
-  const [myName, setMyName] = useState<string>("YOU");
+  const [myName, setMyName] = useState<string>("");
   const [oppName, setOppName] = useState<string>("ENEMY");
   const [isMounted, setIsMounted] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -30,8 +30,10 @@ export function useRoom() {
 
   useEffect(() => {
     setIsMounted(true);
-    setMyId(localStorage.getItem("vlr_duel_id"));
-    setMyName(localStorage.getItem("vlr_duel_username") || "YOU");
+    const storedId = localStorage.getItem("vlr_duel_id");
+    const storedName = localStorage.getItem("vlr_duel_username");
+    setMyId(storedId);
+    setMyName(storedName || (storedId ? `PLAYER_${storedId.slice(0, 4)}` : "PLAYER"));
   }, []);
 
   useEffect(() => {
@@ -43,7 +45,6 @@ export function useRoom() {
       setRoomExists(true);
       const isP1 = data.p1_id === myId;
       setRole(isP1 ? "p1" : "p2");
-      
       const inMyTeam = isP1 ? data.p1_team || [] : data.p2_team || [];
       const inOppTeam = isP1 ? data.p2_team || [] : data.p1_team || [];
       
@@ -58,8 +59,15 @@ export function useRoom() {
         const elapsed = Math.floor((Date.now() - start) / 1000);
         setTimer(Math.max(0, 30 - elapsed));
       }
-      
-      setOppName(isP1 ? (data.p2_name || "WAITING...") : (data.p1_name || "WAITING..."));
+
+      if (isP1) {
+        if (data.p1_name) setMyName(data.p1_name);
+        setOppName(data.p2_name || "WAITING...");
+      } else {
+        if (data.p2_name) setMyName(data.p2_name);
+        setOppName(data.p1_name || "WAITING...");
+      }
+
       statusRef.current = data.status;
       setStatus(data.status);
 
@@ -153,12 +161,21 @@ export function useRoom() {
     isProcessingPick.current = true;
     const { name, cost } = pickQueue.current[0];
 
-    await supabase.rpc('pick_player', {
+    const { data: success, error } = await supabase.rpc('pick_player', {
       room_id_input: params.id,
       player_name: name,
       player_cost: cost,
       player_role: role
     });
+
+    if (error || !success) {
+      const { data: currentRoom } = await supabase.from("room").select("*").eq("id", params.id).single();
+      if (currentRoom) {
+        const isP1 = currentRoom.p1_id === myId;
+        setTeam(isP1 ? currentRoom.p1_team || [] : currentRoom.p2_team || []);
+        setBudget(isP1 ? currentRoom.p1_budget : currentRoom.p2_budget);
+      }
+    }
 
     pickQueue.current.shift();
     isProcessingPick.current = false;
@@ -168,6 +185,9 @@ export function useRoom() {
   const handlePick = async (name: string, cost: number) => {
     if (!params?.id || !role || status !== "DRAFTING" || team.length >= 5 || budget < cost) return;
     if (team.some(p => p.name === name) || oppTeam.some(p => p.name === name)) return;
+    
+    setTeam(prev => [...prev, { name, cost }]);
+    setBudget(prev => prev - cost);
     
     pickQueue.current.push({ name, cost });
     processQueue();
