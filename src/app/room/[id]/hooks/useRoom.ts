@@ -45,22 +45,29 @@ export function useRoom() {
 
     const totalPlayers = (inMyTeam.length || 0) + (inOppTeam.length || 0);
 
-    if (totalPlayers >= 10 || data.status === "ENDED") {
+    if (data.status === "ENDED" || totalPlayers >= 10) {
       setTimer(0);
       setStatus("ENDED");
       statusRef.current = "ENDED";
+      setIsLoading(false);
       if (isP1 && data.status !== "ENDED") {
         supabase.from("room").update({ status: "ENDED" }).eq("id", data.id).then();
       }
-    } else {
-      setStatus(data.status);
-      statusRef.current = data.status;
+      return; 
     }
+
+    setStatus(data.status);
+    statusRef.current = data.status;
 
     if (data.draft_start_at && data.status === "DRAFTING") {
       const start = new Date(data.draft_start_at).getTime();
       const elapsed = Math.floor((Date.now() - start) / 1000);
-      setTimer(Math.max(0, 30 - elapsed));
+      const remaining = Math.max(0, 30 - elapsed);
+      setTimer(remaining);
+      
+      if (remaining === 0 && isP1) {
+        supabase.from("room").update({ status: "ENDED" }).eq("id", data.id).then();
+      }
     }
 
     if (isP1) {
@@ -71,7 +78,7 @@ export function useRoom() {
       setOppName(data.p1_name || "WAITING...");
     }
 
-    if (data.status === "ENDED" || (data.categories && Object.keys(data.categories).length > 0)) {
+    if (data.categories && Object.keys(data.categories).length > 0) {
       setIsLoading(false);
     }
   }, [myId]);
@@ -90,9 +97,14 @@ export function useRoom() {
 
     const waitForCategoriesAndJoin = async (isP1: boolean) => {
       for (let i = 0; i < 5; i++) {
-        await new Promise(res => setTimeout(res, 2000));
+        await new Promise(res => setTimeout(res, 1500));
         const { data: freshData } = await supabase.from("room").select("*").eq("id", roomId).maybeSingle();
         if (!freshData) continue;
+
+        if (freshData.status === "ENDED") {
+            syncStates(freshData);
+            return;
+        }
 
         const categoriesExist = freshData.categories && Object.keys(freshData.categories).length > 0;
         const p1Joined = freshData.p1_joined;
@@ -121,8 +133,13 @@ export function useRoom() {
         return;
       }
 
+      if (data.status === "ENDED") {
+        syncStates(data);
+        return;
+      }
+
       const isP1 = data.p1_id === myId;
-      if (data.status !== "ENDED" && (!data.categories || Object.keys(data.categories).length === 0) && isP1) {
+      if ((!data.categories || Object.keys(data.categories).length === 0) && isP1) {
         try {
           const res = await fetch("/api/players");
           const vlr = await res.json();
