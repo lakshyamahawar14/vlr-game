@@ -9,6 +9,7 @@ export type PresenceUser = {
   name: string;
   challenging?: string | null;
   isQueuing?: boolean;
+  joinedAt?: number;
 };
 
 export function useLobby() {
@@ -28,7 +29,8 @@ export function useLobby() {
   const currentStatusRef = useRef({
     name: "",
     isQueuing: false,
-    challenging: null as string | null
+    challenging: null as string | null,
+    joinedAt: 0
   });
 
   const enqueue = (fn: () => Promise<void>) => {
@@ -38,12 +40,13 @@ export function useLobby() {
   const trackPresence = async () => {
     if (!presenceChannelRef.current) return;
     const latestName = localStorage.getItem("vlr_duel_username") || currentStatusRef.current.name;
-    if (!latestName || latestName === "YOU") return;
+    if (latestName === "YOU") return;
 
     await presenceChannelRef.current.track({
       name: latestName,
       challenging: currentStatusRef.current.challenging,
-      isQueuing: currentStatusRef.current.isQueuing
+      isQueuing: currentStatusRef.current.isQueuing,
+      joinedAt: currentStatusRef.current.joinedAt
     });
   };
 
@@ -104,6 +107,7 @@ export function useLobby() {
     const next = !isQueuing;
     setIsQueuing(next);
     currentStatusRef.current.isQueuing = next;
+    currentStatusRef.current.joinedAt = next ? Date.now() : 0;
     matchmakingLockRef.current = false;
     enqueue(() => trackPresence());
   };
@@ -133,6 +137,7 @@ export function useLobby() {
           name: p?.name && p.name !== "YOU" ? p.name : "Anonymous",
           challenging: p?.challenging ?? null,
           isQueuing: !!p?.isQueuing,
+          joinedAt: p?.joinedAt || 0
         };
       });
 
@@ -175,30 +180,46 @@ export function useLobby() {
 
   useEffect(() => {
     if (!isQueuing || matchmakingLockRef.current || !username || username === "YOU") return;
-    const other = onlineUsers.find((u) => u.isQueuing && u.id !== myId);
-    if (other && myId < other.id) {
-      matchmakingLockRef.current = true;
-      const roomId = `queue_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
-      enqueue(async () => {
-        const actualName = localStorage.getItem("vlr_duel_username") || username;
-        const { error } = await supabase.from("room").insert([{
-          id: roomId, 
-          p1_id: myId, 
-          p2_id: other.id, 
-          status: "DRAFTING", 
-          p1_name: actualName, 
-          p2_name: other.name,
-          p1_budget: 100,
-          p2_budget: 100
-        }]);
-        if (!error && presenceChannelRef.current) {
-          await presenceChannelRef.current.send({
-            type: "broadcast", 
-            event: "duel_started",
-            payload: { roomId, challengerId: myId, targetId: other.id },
+
+    const queueStack = onlineUsers
+      .filter((u) => u.isQueuing)
+      .sort((a, b) => (a.joinedAt || 0) - (b.joinedAt || 0));
+
+    if (queueStack.length >= 2) {
+      const p1 = queueStack[0];
+      const p2 = queueStack[1];
+
+      if (myId === p1.id || myId === p2.id) {
+        if (myId === p1.id) {
+          matchmakingLockRef.current = true;
+          const other = p2;
+          const roomId = `queue_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+          
+          enqueue(async () => {
+            const actualName = localStorage.getItem("vlr_duel_username") || username;
+            const { error } = await supabase.from("room").insert([{
+              id: roomId, 
+              p1_id: myId, 
+              p2_id: other.id, 
+              status: "DRAFTING", 
+              p1_name: actualName, 
+              p2_name: other.name,
+              p1_budget: 100,
+              p2_budget: 100
+            }]);
+
+            if (error) {
+              matchmakingLockRef.current = false;
+            } else if (presenceChannelRef.current) {
+              await presenceChannelRef.current.send({
+                type: "broadcast", 
+                event: "duel_started",
+                payload: { roomId, challengerId: myId, targetId: other.id },
+              });
+            }
           });
         }
-      });
+      }
     }
   }, [isQueuing, onlineUsers, myId, username]);
 
