@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, memo } from "react";
+import { useState, memo, useEffect } from "react";
 
 interface Props {
   challengeStack: { id: string; name: string }[];
@@ -9,13 +9,19 @@ interface Props {
 }
 
 const DuelOverlay = memo(function DuelOverlay({ challengeStack, onAccept, onDecline }: Props) {
-  const [isProcessing, setIsProcessing] = useState(false);
+  const [processingId, setProcessingId] = useState<string | null>(null);
   const currentChallenge = challengeStack[0];
 
-  if (!currentChallenge || isProcessing) return null;
+  useEffect(() => {
+    if (currentChallenge && processingId !== currentChallenge.id) {
+      setProcessingId(null);
+    }
+  }, [currentChallenge?.id]);
+
+  if (!currentChallenge || processingId === currentChallenge.id) return null;
 
   const handleAction = (action: "accept" | "decline") => {
-    setIsProcessing(true);
+    setProcessingId(currentChallenge.id);
     if (action === "accept") {
       onAccept(currentChallenge);
     } else {

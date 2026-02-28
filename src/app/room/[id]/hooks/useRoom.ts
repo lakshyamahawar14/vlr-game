@@ -39,18 +39,17 @@ export function useRoom() {
 
     const syncStates = (data: any) => {
       if (!data) return;
+      setRoomExists(true);
       const isP1 = data.p1_id === myId;
       setRole(isP1 ? "p1" : "p2");
       const inMyTeam = isP1 ? data.p1_team || [] : data.p2_team || [];
       const inOppTeam = isP1 ? data.p2_team || [] : data.p1_team || [];
       setTeam(inMyTeam);
       setOppTeam(inOppTeam);
-      
-      const currentBudget = isP1 ? data.p1_budget : data.p2_budget;
-      setBudget(currentBudget ?? (100 - inMyTeam.reduce((acc: number, p: Player) => acc + p.cost, 0)));
-      
+      setBudget(isP1 ? data.p1_budget : data.p2_budget);
       setCategories(data.categories || null);
       setRawStats(data.raw_stats || {});
+      
       if (data.draft_start_at && data.status === "DRAFTING") {
         const start = new Date(data.draft_start_at).getTime();
         const elapsed = Math.floor((Date.now() - start) / 1000);
@@ -59,20 +58,26 @@ export function useRoom() {
       setOppName(isP1 ? (data.p2_name || "WAITING...") : (data.p1_name || "WAITING..."));
       statusRef.current = data.status;
       setStatus(data.status);
-      setIsLoading(false);
+
+      if (data.categories && Object.keys(data.categories).length > 0) {
+        setIsLoading(false);
+      }
     };
 
     const fetchInitial = async () => {
+      setIsLoading(true);
       const { data, error } = await supabase.from("room").select("*").eq("id", roomId).maybeSingle();
       
-      if (error) {
-        console.error(error);
-        return;
-      }
-
-      if (!data) {
-        setRoomExists(false);
-        setIsLoading(false);
+      if (error || !data) {
+        setTimeout(async () => {
+          const { data: retryData } = await supabase.from("room").select("*").eq("id", roomId).maybeSingle();
+          if (!retryData) {
+            setRoomExists(false);
+            setIsLoading(false);
+          } else {
+            syncStates(retryData);
+          }
+        }, 2000);
         return;
       }
 
@@ -92,7 +97,6 @@ export function useRoom() {
             .single();
           if (updatedData) syncStates(updatedData);
         } catch (e) {
-          console.error(e);
           syncStates(data);
         }
       } else {
@@ -135,20 +139,15 @@ export function useRoom() {
 
   const processQueue = async () => {
     if (isProcessingPick.current || pickQueue.current.length === 0) return;
-
     isProcessingPick.current = true;
     const { name, cost } = pickQueue.current[0];
 
-    const { error } = await supabase.rpc('pick_player', {
+    await supabase.rpc('pick_player', {
       room_id_input: params.id,
       player_name: name,
       player_cost: cost,
       player_role: role
     });
-
-    if (error) {
-      console.error(error.message);
-    }
 
     pickQueue.current.shift();
     isProcessingPick.current = false;
@@ -161,7 +160,6 @@ export function useRoom() {
     
     setTeam(prev => [...prev, { name, cost }]);
     setBudget(prev => prev - cost);
-
     pickQueue.current.push({ name, cost });
     processQueue();
   };

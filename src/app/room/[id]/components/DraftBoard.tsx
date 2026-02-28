@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useEffect } from "react";
+import { useMemo } from "react";
 
 type Player = { name: string; cost: number };
 
@@ -13,45 +13,17 @@ interface Props {
 }
 
 export default function DraftBoard({ team, oppTeam, budget, onPick, categories }: Props) {
-  const [isLoading, setIsLoading] = useState(true);
-
   const sortedCategories = useMemo(() => {
     const entries = Object.entries(categories || {});
     return entries.sort(([costA], [costB]) => Number(costB) - Number(costA));
   }, [categories]);
 
-  useEffect(() => {
-    const hasData = Object.keys(categories || {}).length > 0;
-    
-    if (hasData) {
-      setIsLoading(false);
-    } else {
-      const timer = setTimeout(() => {
-        window.location.reload();
-      }, 5000);
-
-      return () => clearTimeout(timer);
-    }
-  }, [categories]);
-
-  if (isLoading) {
-    return (
-      <div className="flex flex-col items-center justify-center p-20 border-4 border-black bg-yellow-300">
-        <div className="text-4xl font-black italic animate-bounce mb-4 text-black">
-          LOADING...
-        </div>
-        <p className="font-black uppercase text-xs tracking-tighter">
-          If this takes longer than 5 seconds, please reload
-        </p>
-      </div>
-    );
-  }
+  if (!categories || Object.keys(categories).length === 0) return null;
 
   return (
     <div className={`grid grid-cols-1 md:grid-cols-2 gap-4 transition-opacity duration-500 ${team.length >= 5 ? 'opacity-40 grayscale pointer-events-none' : 'opacity-100'}`}>
       {sortedCategories.map(([cost, players]) => {
         const costNum = Number(cost);
-        
         return (
           <div key={cost} className="border-4 border-black bg-gray-50 flex flex-col relative overflow-hidden">
             <div className="absolute top-0 right-0 p-1">
@@ -68,8 +40,7 @@ export default function DraftBoard({ team, oppTeam, budget, onPick, categories }
                 const isPicked = team.some(tp => tp.name === p);
                 const isOpponentPicked = oppTeam.some(tp => tp.name === p);
                 const canAfford = budget >= costNum;
-                const isRosterFull = team.length >= 5;
-                const isDisabled = isPicked || isOpponentPicked || !canAfford || isRosterFull;
+                const isDisabled = isPicked || isOpponentPicked || !canAfford || team.length >= 5;
 
                 return (
                   <button 
@@ -95,25 +66,13 @@ export default function DraftBoard({ team, oppTeam, budget, onPick, categories }
                       </div>
 
                       {isOpponentPicked ? (
-                        <div className="bg-red-600 text-white text-[10px] px-2 py-1 rotate-12 border border-black">
-                          ALREADY TAKEN
-                        </div>
+                        <div className="bg-red-600 text-white text-[10px] px-2 py-1 rotate-12 border border-black">ALREADY TAKEN</div>
                       ) : isPicked ? (
-                        <div className="bg-black text-white text-[10px] px-2 py-1 border border-black">
-                          PICKED
-                        </div>
+                        <div className="bg-black text-white text-[10px] px-2 py-1 border border-black">PICKED</div>
                       ) : !canAfford && (
-                        <div className="text-[10px] text-red-600 font-black animate-pulse">
-                          LOW BUDGET
-                        </div>
+                        <div className="text-[10px] text-red-600 font-black animate-pulse">LOW BUDGET</div>
                       )}
                     </div>
-                    
-                    {!isDisabled && (
-                      <div className="absolute bottom-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <div className="w-2 h-2 bg-black" />
-                      </div>
-                    )}
                   </button>
                 );
               })}

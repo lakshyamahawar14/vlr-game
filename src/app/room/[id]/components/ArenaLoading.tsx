@@ -1,6 +1,19 @@
+"use client";
+
+import { useState, useEffect } from "react";
+
 export default function ArenaLoading() {
+  const [showReload, setShowReload] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowReload(true);
+    }, 5000);
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
-    <div className="min-h-screen bg-white flex flex-col items-center justify-center font-mono overflow-hidden relative">
+    <div className="fixed inset-0 z-[1000] bg-white flex flex-col items-center justify-center font-mono overflow-hidden">
       <div className="absolute inset-0 z-0 opacity-[0.03] pointer-events-none select-none flex flex-col items-center justify-center">
         <span className="text-[20vw] font-black uppercase leading-none">LOADING</span>
         <span className="text-[20vw] font-black uppercase leading-none">LOADING</span>
@@ -16,9 +29,13 @@ export default function ArenaLoading() {
             Loading <span className="text-red-600">Duel</span>
           </h2>
 
-          <p className="text-[15px] md:text-xs font-bold uppercase tracking-wider text-gray-500">
-            If this takes longer than 5 seconds, please reload
-          </p>
+          <div className="h-6">
+            {showReload && (
+              <p className="text-[15px] md:text-xs font-bold uppercase tracking-wider text-red-600">
+                Please reload the page
+              </p>
+            )}
+          </div>
           
           <div className="flex items-center gap-3">
             <span className="w-2 h-2 bg-black rounded-full animate-bounce [animation-delay:-0.3s]" />
@@ -26,7 +43,7 @@ export default function ArenaLoading() {
             <span className="w-2 h-2 bg-black rounded-full animate-bounce" />
           </div>
 
-          <p className="text-[10px] font-black uppercase tracking-[0.4em] text-gray-400 mt-4 animate-pulse">
+          <p className="text-[10px] font-black uppercase tracking-[0.4em] text-gray-400 mt-4">
             Preparing Player Pool
           </p>
         </div>
