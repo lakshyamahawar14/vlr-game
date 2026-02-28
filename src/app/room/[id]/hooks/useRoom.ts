@@ -59,13 +59,12 @@ export function useRoom() {
       statusRef.current = data.status;
       setStatus(data.status);
 
-      if (data.categories && Object.keys(data.categories).length > 0) {
+      if (data.status === "ENDED" || (data.categories && Object.keys(data.categories).length > 0)) {
         setIsLoading(false);
       }
     };
 
     const fetchInitial = async () => {
-      setIsLoading(true);
       const { data, error } = await supabase.from("room").select("*").eq("id", roomId).maybeSingle();
       
       if (error || !data) {
@@ -82,7 +81,7 @@ export function useRoom() {
       }
 
       setRoomExists(true);
-      if ((!data.categories || Object.keys(data.categories).length === 0) && data.p1_id === myId) {
+      if (data.status !== "ENDED" && (!data.categories || Object.keys(data.categories).length === 0) && data.p1_id === myId) {
         try {
           const res = await fetch("/api/players");
           const vlr = await res.json();

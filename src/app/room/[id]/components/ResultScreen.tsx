@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import { useMemo } from "react";
 
@@ -31,7 +33,7 @@ export default function ResultScreen({ myName, oppName, myTeam, oppTeam, rawStat
 
   return (
     <div className="w-full bg-white border-[4px] border-black font-mono shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] flex flex-col">
-      <div className={`border-b-[4px] border-black p-3 flex flex-col items-center justify-center text-black transition-colors ${iWon ? "bg-[#22C55E]" : oppWon ? "bg-red-500" : "bg-yellow-400"}`}>
+      <div className={`border-b-[4px] border-black p-3 flex flex-col items-center justify-center text-black ${iWon ? "bg-[#22C55E]" : oppWon ? "bg-red-500" : "bg-yellow-400"}`}>
         <p className="text-[10px] font-black uppercase tracking-[0.3em] mb-0.5 opacity-90">
           Winner
         </p>
@@ -92,10 +94,10 @@ export default function ResultScreen({ myName, oppName, myTeam, oppTeam, rawStat
         </div>
       </div>
 
-      <div className="p-3 border-t-[4px] border-black bg-gray-50 flex justify-center">
+      <div className="p-6 border-t-[4px] border-black bg-white flex justify-center">
         <Link 
           href="/"
-          className="w-full md:w-auto md:px-8 bg-black text-white py-2 font-black uppercase text-sm text-center transition-all hover:bg-yellow-400 hover:text-black border-2 border-black active:translate-y-1"
+          className="w-full max-w-[200px] py-3 text-sm font-black uppercase border-4 border-black bg-yellow-400 text-black hover:bg-yellow-500 text-center outline-none select-none"
         >
           Return to Lobby
         </Link>
