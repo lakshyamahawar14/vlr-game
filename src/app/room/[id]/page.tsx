@@ -56,7 +56,7 @@ export default function RoomPage() {
               oppTeam={oppTeam} 
               budget={budget} 
               onPick={handlePick} 
-              categories={categories || {}}
+              categories={Array.isArray(categories) ? categories : []}
             />
           </div>
 
