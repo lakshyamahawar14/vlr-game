@@ -25,7 +25,7 @@ export function useLobby() {
   const presenceChannelRef = useRef<any>(null);
   const matchmakingLockRef = useRef<boolean>(false);
   const actionQueueRef = useRef<Promise<void>>(Promise.resolve());
-  
+
   const currentStatusRef = useRef({
     name: "",
     isQueuing: false,
@@ -67,22 +67,25 @@ export function useLobby() {
     const challenger = challengeStack[0];
     setChallengeStack([]);
     const roomId = `match_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
-    
+
     enqueue(async () => {
       const actualName = localStorage.getItem("vlr_duel_username") || username;
       const { error } = await supabase.from("room").insert([{
-        id: roomId, 
-        p1_id: challenger.id, 
-        p2_id: myId, 
-        status: "DRAFTING",
-        p1_name: challenger.name, 
+        id: roomId,
+        p1_id: challenger.id,
+        p2_id: myId,
+        status: "WAITING",
+        p1_joined: false,
+        p2_joined: false,
+        p1_name: challenger.name,
         p2_name: actualName,
         p1_budget: 100,
         p2_budget: 100
       }]);
+
       if (!error && presenceChannelRef.current) {
         await presenceChannelRef.current.send({
-          type: "broadcast", 
+          type: "broadcast",
           event: "duel_started",
           payload: { roomId, challengerId: challenger.id, targetId: myId },
         });
@@ -97,7 +100,9 @@ export function useLobby() {
     enqueue(async () => {
       if (presenceChannelRef.current) {
         await presenceChannelRef.current.send({
-          type: "broadcast", event: "duel_declined", payload: { challengerId },
+          type: "broadcast",
+          event: "duel_declined",
+          payload: { challengerId },
         });
       }
     });
@@ -189,42 +194,56 @@ export function useLobby() {
       const p1 = queueStack[0];
       const p2 = queueStack[1];
 
-      if (myId === p1.id || myId === p2.id) {
-        if (myId === p1.id) {
-          matchmakingLockRef.current = true;
-          const other = p2;
-          const roomId = `queue_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
-          
-          enqueue(async () => {
-            const actualName = localStorage.getItem("vlr_duel_username") || username;
-            const { error } = await supabase.from("room").insert([{
-              id: roomId, 
-              p1_id: myId, 
-              p2_id: other.id, 
-              status: "DRAFTING", 
-              p1_name: actualName, 
-              p2_name: other.name,
-              p1_budget: 100,
-              p2_budget: 100
-            }]);
+      if (myId === p1.id) {
+        matchmakingLockRef.current = true;
+        const other = p2;
+        const roomId = `queue_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
 
-            if (error) {
-              matchmakingLockRef.current = false;
-            } else if (presenceChannelRef.current) {
-              await presenceChannelRef.current.send({
-                type: "broadcast", 
-                event: "duel_started",
-                payload: { roomId, challengerId: myId, targetId: other.id },
-              });
-            }
-          });
-        }
+        enqueue(async () => {
+          const actualName = localStorage.getItem("vlr_duel_username") || username;
+          const { error } = await supabase.from("room").insert([{
+            id: roomId,
+            p1_id: myId,
+            p2_id: other.id,
+            status: "WAITING",
+            p1_joined: false,
+            p2_joined: false,
+            p1_name: actualName,
+            p2_name: other.name,
+            p1_budget: 100,
+            p2_budget: 100
+          }]);
+
+          if (error) {
+            matchmakingLockRef.current = false;
+          } else if (presenceChannelRef.current) {
+            await presenceChannelRef.current.send({
+              type: "broadcast",
+              event: "duel_started",
+              payload: { roomId, challengerId: myId, targetId: other.id },
+            });
+          }
+        });
       }
     }
   }, [isQueuing, onlineUsers, myId, username]);
 
   return {
-    myId, username, setUsername, isMounted, isQueuing, onlineUsers, challengeStack, isWaitingForResponse,
-    sendDuelRequest, cancelDuelRequest, acceptDuel, declineDuel, toggleQueue, trackPresence, enqueue, currentStatusRef
+    myId,
+    username,
+    setUsername,
+    isMounted,
+    isQueuing,
+    onlineUsers,
+    challengeStack,
+    isWaitingForResponse,
+    sendDuelRequest,
+    cancelDuelRequest,
+    acceptDuel,
+    declineDuel,
+    toggleQueue,
+    trackPresence,
+    enqueue,
+    currentStatusRef
   };
 }

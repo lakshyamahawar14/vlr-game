@@ -13,18 +13,18 @@ interface MainHeroProps {
   onSaveName: (newName: string) => void;
 }
 
-const MainHero = memo(function MainHero({ 
-  myId, 
-  username, 
-  setUsername, 
-  isQueuing, 
+const MainHero = memo(function MainHero({
+  myId,
+  username,
+  setUsername,
+  isQueuing,
   onQueueAction,
-  onSaveName 
+  onSaveName
 }: MainHeroProps) {
   return (
     <div className="relative flex-1 flex flex-col items-center justify-center p-8 bg-white min-h-screen w-full overflow-hidden">
       <div className="absolute top-4 right-4 md:top-8 md:right-8 z-50">
-        <Link 
+        <Link
           href="/leaderboard"
           className="block px-4 py-2 bg-violet-600 text-white font-black uppercase text-[10px] md:text-xs border-2 border-black hover:bg-violet-700 transition-colors"
         >
@@ -32,20 +32,23 @@ const MainHero = memo(function MainHero({
         </Link>
       </div>
 
-      <UserProfile 
-        myId={myId} 
-        username={username} 
-        setUsername={setUsername} 
-        onSaveName={onSaveName} 
+      <UserProfile
+        myId={myId}
+        username={username}
+        setUsername={setUsername}
+        onSaveName={onSaveName}
       />
 
       <div className="flex flex-col items-center">
         <div className="relative mb-6 px-6 py-2">
           <div className="absolute -top-2 -left-2 w-8 h-8 border-t-8 border-l-8 border-black" />
           <div className="absolute -bottom-2 -right-2 w-8 h-8 border-b-8 border-r-8 border-black" />
-          
+
           <h1 className="text-7xl md:text-9xl font-black uppercase tracking-tighter text-center leading-none">
-            VLR <span className="text-indigo-600">DUEL</span>
+            NOT <span className="text-indigo-600">WORKING</span>
+          </h1>
+          <h1 className="text-7xl md:text-9xl font-black uppercase tracking-tighter text-center leading-none">
+            IN <span className="text-indigo-600">MAINTENANCE</span>
           </h1>
         </div>
 

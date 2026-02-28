@@ -26,7 +26,7 @@ export default function RoomPage() {
     handlePick,
     categories,
     rawStats,
-    oppLeft
+    oppLeft,
   } = useRoom();
 
   if (!isMounted || isLoading) {
@@ -37,52 +37,63 @@ export default function RoomPage() {
     return <RoomNotFound roomId={params.id as string} />;
   }
 
+  const isWaiting = status === "WAITING";
   const isDrafting = status === "DRAFTING";
+  const isEnded = status === "ENDED";
 
   return (
     <div className="min-h-screen bg-white p-4 max-w-7xl mx-auto font-mono text-black">
-      <ArenaHeader 
-        budget={budget} 
-        status={status} 
-        timer={timer} 
+      <ArenaHeader
+        budget={budget}
+        status={status}
+        timer={timer}
         oppLeft={oppLeft}
       />
 
-      {isDrafting ? (
+      {isWaiting && (
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <ArenaLoading />
+        </div>
+      )}
+
+      {isDrafting && (
         <div className="flex flex-col lg:grid lg:grid-cols-4 gap-6">
           <div className="order-1 lg:order-2 lg:col-span-2">
-            <DraftBoard 
-              team={team} 
-              oppTeam={oppTeam} 
-              budget={budget} 
-              onPick={handlePick} 
+            <DraftBoard
+              team={team}
+              oppTeam={oppTeam}
+              budget={budget}
+              onPick={handlePick}
               categories={Array.isArray(categories) ? categories : []}
+              status={status}
             />
           </div>
 
           <div className="order-2 lg:order-1">
-            <TeamDisplay 
-              name={myName} 
-              value={myValue} 
-              team={team} 
-              variant="player" 
+            <TeamDisplay
+              name={myName}
+              value={myValue}
+              team={team}
+              variant="player"
             />
           </div>
 
           <div className="order-3 lg:order-3">
-            <TeamDisplay 
-              name={oppName} 
-              value={oppValue} 
-              team={oppTeam} 
-              variant="opponent" 
+            <TeamDisplay
+              name={oppName}
+              value={oppValue}
+              team={oppTeam}
+              variant="opponent"
             />
           </div>
         </div>
-      ) : (
+      )}
+
+      {isEnded && (
         <div className="max-w-5xl mx-auto">
-          <ResultScreen 
-            myName={myName} 
-            oppName={oppName} 
+          <ResultScreen
+            myName={myName}
+            oppName={oppName}
             myTeam={team}
             oppTeam={oppTeam}
             rawStats={rawStats}
