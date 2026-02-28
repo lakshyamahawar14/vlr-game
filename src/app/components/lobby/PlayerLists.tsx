@@ -25,14 +25,14 @@ const UserCard = memo(({
   onCancelDuel: () => void;
 }) => {
   return (
-    <div className="p-4 border-2 border-black bg-white">
+    <div className={`p-4 border-2 border-black ${isMe ? "bg-yellow-400" : "bg-white"}`}>
       <div className="flex justify-between items-center">
         <div className="flex flex-col min-w-0">
           <span className="text-sm font-black uppercase tracking-tight truncate pr-2 text-black">
             {user.name}
           </span>
           <div className="flex items-center gap-1.5">
-             <div className={`w-2 h-2 border border-black ${user.isQueuing ? "bg-yellow-400" : "bg-emerald-500"}`} />
+             <div className={`w-2 h-2 border border-black ${user.isQueuing ? (isMe ? "bg-black" : "bg-yellow-400") : "bg-emerald-500"}`} />
              <p className="text-[10px] font-bold text-black uppercase">
                {user.isQueuing ? "In Queue" : "Available"}
              </p>

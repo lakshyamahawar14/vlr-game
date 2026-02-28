@@ -12,7 +12,7 @@ export default function ArenaHeader({ budget, status, timer, oppLeft }: Props) {
   const isUrgent = status === "DRAFTING" && timer <= 10;
 
   const getTimerBg = () => {
-    if (isEnded) return "bg-[#FF5757]";
+    if (isEnded) return "bg-[#A855F7]";
     if (status !== "DRAFTING") return "bg-gray-100";
     if (isUrgent) return timer % 2 === 0 ? "bg-[#FF5757]" : "bg-[#FFDE59]";
     return "bg-white";
@@ -60,7 +60,7 @@ export default function ArenaHeader({ budget, status, timer, oppLeft }: Props) {
         )}
 
         {isEnded && (
-          <div className="p-4 flex flex-col items-center justify-center bg-[#FF5757]">
+          <div className="p-4 flex flex-col items-center justify-center bg-[#A855F7]">
             <p className="text-[10px] font-black uppercase tracking-[0.3em] mb-1 text-white/90">
               Match Status
             </p>
