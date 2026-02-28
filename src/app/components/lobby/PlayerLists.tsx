@@ -82,7 +82,7 @@ export default function PlayerLists({
         {onlineUsers.length === 0 ? (
           <div className="border-2 border-dashed border-black p-8 text-center">
             <p className="text-[10px] font-black text-black uppercase">
-              No players online
+              Fetching Players...
             </p>
           </div>
         ) : (
