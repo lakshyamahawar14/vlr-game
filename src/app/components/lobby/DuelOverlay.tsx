@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, memo } from "react";
 
 interface Props {
   challengeStack: { id: string; name: string }[];
@@ -8,16 +8,11 @@ interface Props {
   onDecline: (challengerId: string) => void;
 }
 
-export default function DuelOverlay({ challengeStack, onAccept, onDecline }: Props) {
+const DuelOverlay = memo(function DuelOverlay({ challengeStack, onAccept, onDecline }: Props) {
   const [isProcessing, setIsProcessing] = useState(false);
-
-  useEffect(() => {
-    setIsProcessing(false);
-  }, [challengeStack.length]);
-
-  if (challengeStack.length === 0 || isProcessing) return null;
-
   const currentChallenge = challengeStack[0];
+
+  if (!currentChallenge || isProcessing) return null;
 
   const handleAction = (action: "accept" | "decline") => {
     setIsProcessing(true);
@@ -29,55 +24,46 @@ export default function DuelOverlay({ challengeStack, onAccept, onDecline }: Pro
   };
 
   return (
-    <div className="absolute inset-0 z-50 bg-black flex flex-col items-center justify-center p-8 overflow-hidden">
-      <div className="absolute top-0 left-0 w-full h-1 bg-red-600 animate-pulse" />
-      <div className="absolute bottom-0 left-0 w-full h-1 bg-red-600 animate-pulse" />
-      
-      <div className="relative mb-8 text-center">
-        <div className="inline-block px-3 py-1 bg-red-600 text-black text-[10px] font-black uppercase mb-4 tracking-[0.2em] animate-bounce">
-          Incoming Duel Invite
+    <div className="fixed z-[999] top-0 left-0 w-full lg:left-auto lg:right-6 lg:top-6 lg:w-96 bg-black border-b-4 lg:border-4 border-red-600 shadow-2xl">
+      <div className="p-5 flex flex-col gap-4">
+        <div className="flex flex-col items-start gap-1">
+          <div className="inline-block px-2 py-1 bg-red-600 text-black text-[10px] font-black uppercase tracking-widest mb-1">
+            Incoming Duel
+          </div>
+          
+          <h3 className="text-2xl lg:text-3xl font-black uppercase italic text-white leading-tight truncate w-full">
+            {currentChallenge.name}
+          </h3>
+          
+          <p className="text-[10px] font-mono text-white uppercase font-bold">
+            USER ID: {currentChallenge.id.slice(0, 8)}
+          </p>
         </div>
-        <p className="text-gray-400 text-[10px] font-black uppercase tracking-widest mb-1">
-          Inbound Duel Invites ({challengeStack.length})
-        </p>
-        <h3 className="text-4xl md:text-5xl font-black uppercase italic text-white tracking-tighter leading-none break-all mb-2">
-          {currentChallenge.name}
-        </h3>
-        <p className="text-[11px] font-mono text-white uppercase tracking-wider font-bold">
-          User ID: {currentChallenge.id.slice(0, 8)}
-        </p>
-      </div>
 
-      <div className="flex flex-col gap-4 w-full max-w-xs relative">
-        <button 
-          onClick={() => handleAction("accept")} 
-          className="relative group bg-white text-black py-5 text-xl font-black uppercase transition-all hover:-translate-y-1 hover:bg-emerald-400 active:translate-y-0"
-        >
-          <span className="relative z-10 flex items-center justify-center gap-2">
+        <div className="flex gap-3 w-full">
+          <button 
+            onClick={() => handleAction("accept")} 
+            className="flex-1 bg-emerald-400 text-black h-14 text-sm font-black uppercase hover:bg-emerald-500 active:scale-95 transition-all"
+          >
             Accept
-          </span>
-          <div className="absolute inset-0 border-2 border-white translate-x-2 translate-y-2 group-hover:translate-x-0 group-hover:translate-y-0 transition-all -z-10" />
-        </button>
+          </button>
+          
+          <button 
+            onClick={() => handleAction("decline")} 
+            className="flex-1 bg-transparent text-white border-2 border-white/20 h-14 text-sm font-black uppercase hover:border-red-600 hover:text-red-600 transition-all active:scale-95"
+          >
+            Decline
+          </button>
+        </div>
 
-        <button 
-          onClick={() => handleAction("decline")} 
-          className="py-3 text-sm font-black uppercase text-white border-2 border-white/20 hover:border-red-600 hover:text-red-600 transition-colors"
-        >
-          Decline
-        </button>
+        {challengeStack.length > 1 && (
+          <p className="text-[10px] font-black text-red-600 uppercase tracking-widest pt-1 border-t border-white/10">
+            + {challengeStack.length - 1} Other Pending Invites
+          </p>
+        )}
       </div>
-
-      <div className="mt-12 opacity-10 flex gap-4 pointer-events-none">
-        <span className="text-6xl font-black uppercase">DUEL</span>
-        <span className="text-6xl font-black uppercase outline-text">DUEL</span>
-      </div>
-
-      <style jsx>{`
-        .outline-text {
-          -webkit-text-stroke: 1px white;
-          color: transparent;
-        }
-      `}</style>
     </div>
   );
-}
+});
+
+export default DuelOverlay;

@@ -29,6 +29,13 @@ export default function Home() {
 
   return (
     <div className="flex flex-col lg:flex-row min-h-screen bg-white text-black font-mono overflow-x-hidden">
+      <DuelOverlay 
+        key={challengeStack[0]?.id || "empty"} 
+        challengeStack={challengeStack} 
+        onAccept={acceptDuel} 
+        onDecline={declineDuel} 
+      />
+
       <div className="order-3 lg:order-1 w-full lg:w-80 lg:min-h-screen lg:sticky lg:top-0 flex flex-col">
         <ProtocolList />
       </div>
@@ -45,7 +52,6 @@ export default function Home() {
       </div>
 
       <div className="order-2 lg:order-3 w-full lg:w-80 flex flex-col relative lg:h-screen lg:sticky lg:top-0">
-        <DuelOverlay challengeStack={challengeStack} onAccept={acceptDuel} onDecline={declineDuel} />
         <PlayerLists 
           onlineUsers={onlineUsers} 
           myId={myId} 
