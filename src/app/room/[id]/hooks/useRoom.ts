@@ -43,8 +43,10 @@ export function useRoom() {
       setRoomExists(true);
       const isP1 = data.p1_id === myId;
       setRole(isP1 ? "p1" : "p2");
+      
       const inMyTeam = isP1 ? data.p1_team || [] : data.p2_team || [];
       const inOppTeam = isP1 ? data.p2_team || [] : data.p1_team || [];
+      
       setTeam(inMyTeam);
       setOppTeam(inOppTeam);
       setBudget(isP1 ? data.p1_budget : data.p2_budget);
@@ -56,6 +58,7 @@ export function useRoom() {
         const elapsed = Math.floor((Date.now() - start) / 1000);
         setTimer(Math.max(0, 30 - elapsed));
       }
+      
       setOppName(isP1 ? (data.p2_name || "WAITING...") : (data.p1_name || "WAITING..."));
       statusRef.current = data.status;
       setStatus(data.status);
@@ -67,21 +70,12 @@ export function useRoom() {
 
     const fetchInitial = async () => {
       const { data, error } = await supabase.from("room").select("*").eq("id", roomId).maybeSingle();
-      
       if (error || !data) {
-        setTimeout(async () => {
-          const { data: retryData } = await supabase.from("room").select("*").eq("id", roomId).maybeSingle();
-          if (!retryData) {
-            setRoomExists(false);
-            setIsLoading(false);
-          } else {
-            syncStates(retryData);
-          }
-        }, 2000);
+        setRoomExists(false);
+        setIsLoading(false);
         return;
       }
 
-      setRoomExists(true);
       if (data.status !== "ENDED" && (!data.categories || Object.keys(data.categories).length === 0) && data.p1_id === myId) {
         try {
           const res = await fetch("/api/players");
@@ -119,7 +113,7 @@ export function useRoom() {
       }, (payload) => {
         syncStates(payload.new);
       })
-      .on("presence", { event: "leave" }, ({ leftPresences }) => {
+      .on("presence", { event: "leave" }, () => {
         if (statusRef.current === "DRAFTING") {
           statusRef.current = "ENDED";
           setStatus("ENDED");
@@ -175,8 +169,6 @@ export function useRoom() {
     if (!params?.id || !role || status !== "DRAFTING" || team.length >= 5 || budget < cost) return;
     if (team.some(p => p.name === name) || oppTeam.some(p => p.name === name)) return;
     
-    setTeam(prev => [...prev, { name, cost }]);
-    setBudget(prev => prev - cost);
     pickQueue.current.push({ name, cost });
     processQueue();
   };
