@@ -4,25 +4,25 @@ import { useMemo } from "react";
 
 type Player = { name: string; cost: number };
 
+interface Category {
+  cost: number;
+  players: string[];
+}
+
 interface Props {
   team: Player[];
   oppTeam: Player[];
   budget: number;
   onPick: (name: string, cost: number) => void;
-  categories: Record<string | number, string[]>;
+  categories: Category[];
 }
 
 export default function DraftBoard({ team, oppTeam, budget, onPick, categories }: Props) {
-  const sortedCategories = useMemo(() => {
-    const entries = Object.entries(categories || {});
-    return entries.sort(() => Math.random() - 0.5);
-  }, [categories]);
-
-  if (!categories || Object.keys(categories).length === 0) return null;
+  if (!categories || categories.length === 0) return null;
 
   return (
     <div className={`grid grid-cols-1 md:grid-cols-2 gap-3 transition-opacity duration-500 ${team.length >= 5 ? 'opacity-40 grayscale pointer-events-none' : 'opacity-100'}`}>
-      {sortedCategories.map(([cost, players]) => {
+      {categories.map(({ cost, players }) => {
         const costNum = Number(cost);
         return (
           <div key={cost} className="border-2 border-black bg-white flex flex-col">

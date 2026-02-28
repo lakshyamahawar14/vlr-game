@@ -4,13 +4,13 @@ import { supabase } from "@/lib/supabase";
 export const dynamic = 'force-dynamic';
 
 const DEFAULT_POOL = {
-  pool: {
-    30: ["aspas", "TenZ", "ZywOo", "Chronicle", "Leo", "Sacy"],
-    25: ["Derke", "cned", "Alfajer", "Less", "Yay", "Cryocells"],
-    20: ["Boaster", "Saadhak", "FNS", "MaKo", "p0ceit", "Zellsis"],
-    15: ["Mazino", "Klaus", "BuZz", "stax", "Scary", "Ardiis"],
-    10: ["Rb", "Zest", "Benkai", "Foxy9", "Nats", "Redgar"]
-  },
+  pool: [
+    { cost: 30, players: ["aspas", "TenZ", "ZywOo", "Chronicle", "Leo", "Sacy"] },
+    { cost: 25, players: ["Derke", "cned", "Alfajer", "Less", "Yay", "Cryocells"] },
+    { cost: 20, players: ["Boaster", "Saadhak", "FNS", "MaKo", "p0ceit", "Zellsis"] },
+    { cost: 15, players: ["Mazino", "Klaus", "BuZz", "stax", "Scary", "Ardiis"] },
+    { cost: 10, players: ["Rb", "Zest", "Benkai", "Foxy9", "Nats", "Redgar"] }
+  ],
   rawStats: {
     "aspas": 1, "tenz": 1, "zywoo": 1, "chronicle": 1, "leo": 1, "sacy": 1,
     "derke": 1, "cned": 1, "alfajer": 1, "less": 1, "yay": 1, "cryocells": 1,
@@ -30,15 +30,17 @@ export async function GET() {
       throw new Error("DB_ERROR");
     }
 
-    const shuffled = [...allPlayers].sort(() => 0.5 - Math.random());
+    const shuffledPlayers = [...allPlayers].sort(() => 0.5 - Math.random());
 
-    const pool = {
-      30: shuffled.slice(0, 3).map(p => p.name),
-      25: shuffled.slice(3, 6).map(p => p.name),
-      20: shuffled.slice(6, 9).map(p => p.name),
-      15: shuffled.slice(9, 12).map(p => p.name),
-      10: shuffled.slice(12, 15).map(p => p.name)
-    };
+    const poolArray = [
+      { cost: 30, players: shuffledPlayers.slice(0, 3).map(p => p.name) },
+      { cost: 25, players: shuffledPlayers.slice(3, 6).map(p => p.name) },
+      { cost: 20, players: shuffledPlayers.slice(6, 9).map(p => p.name) },
+      { cost: 15, players: shuffledPlayers.slice(9, 12).map(p => p.name) },
+      { cost: 10, players: shuffledPlayers.slice(12, 15).map(p => p.name) }
+    ];
+
+    const pool = poolArray.sort(() => Math.random() - 0.5);
 
     const rawStats = allPlayers.reduce((acc, p) => {
       acc[p.name.toLowerCase()] = p.rating;
@@ -48,21 +50,9 @@ export async function GET() {
     return NextResponse.json({ pool, rawStats });
 
   } catch (err) {
-    const getUniqueFallback = () => {
-      const allNames = Object.values(DEFAULT_POOL.pool).flat();
-      const shuffledNames = [...allNames].sort(() => 0.5 - Math.random());
-      
-      return {
-        30: shuffledNames.slice(0, 3),
-        25: shuffledNames.slice(3, 6),
-        20: shuffledNames.slice(6, 9),
-        15: shuffledNames.slice(9, 12),
-        10: shuffledNames.slice(12, 15)
-      };
-    };
-
+    const shuffledDefault = [...DEFAULT_POOL.pool].sort(() => Math.random() - 0.5);
     return NextResponse.json({ 
-      pool: getUniqueFallback(), 
+      pool: shuffledDefault, 
       rawStats: DEFAULT_POOL.rawStats 
     });
   }
