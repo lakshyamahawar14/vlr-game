@@ -32,7 +32,7 @@ export default function ResultScreen({ myName, oppName, myTeam, oppTeam, rawStat
   }, [iWon, oppWon, myName, oppName]);
 
   return (
-    <div className="w-full bg-white border-[4px] border-black font-mono shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] flex flex-col">
+    <div className="w-full bg-white border-[4px] border-black font-mono flex flex-col">
       <div className={`border-b-[4px] border-black p-3 flex flex-col items-center justify-center text-black ${iWon ? "bg-[#22C55E]" : oppWon ? "bg-red-500" : "bg-yellow-400"}`}>
         <p className="text-[10px] font-black uppercase tracking-[0.3em] mb-0.5 opacity-90">
           Winner
