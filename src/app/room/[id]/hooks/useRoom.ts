@@ -22,6 +22,7 @@ export function useRoom() {
   const [role, setRole] = useState<"p1" | "p2" | null>(null);
   const [categories, setCategories] = useState<Record<string, string[]> | null>(null);
   const [rawStats, setRawStats] = useState<Record<string, number>>({});
+  const [oppLeft, setOppLeft] = useState(false);
   const statusRef = useRef<string | null>(null);
   
   const isProcessingPick = useRef(false);
@@ -105,7 +106,11 @@ export function useRoom() {
 
     fetchInitial();
 
-    const channel = supabase.channel(`room_${roomId}`)
+    const channel = supabase.channel(`room_${roomId}`, {
+      config: { presence: { key: myId } },
+    });
+
+    channel
       .on("postgres_changes", { 
         event: "UPDATE", 
         schema: "public", 
@@ -114,7 +119,20 @@ export function useRoom() {
       }, (payload) => {
         syncStates(payload.new);
       })
-      .subscribe();
+      .on("presence", { event: "leave" }, ({ leftPresences }) => {
+        if (statusRef.current === "DRAFTING") {
+          statusRef.current = "ENDED";
+          setStatus("ENDED");
+          setTimer(0);
+          setOppLeft(true);
+          supabase.from("room").update({ status: "ENDED" }).eq("id", roomId).then();
+        }
+      })
+      .subscribe(async (subStatus) => {
+        if (subStatus === "SUBSCRIBED") {
+          await channel.track({ online_at: new Date().toISOString(), user_id: myId });
+        }
+      });
 
     const interval = setInterval(() => {
       if (statusRef.current === "DRAFTING") {
@@ -169,6 +187,6 @@ export function useRoom() {
   return {
     params, myId, myName, oppName, isMounted, isLoading, roomExists,
     team, oppTeam, budget, timer, status, myValue, oppValue, handlePick,
-    categories, rawStats
+    categories, rawStats, oppLeft
   };
 }

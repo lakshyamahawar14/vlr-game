@@ -25,7 +25,8 @@ export default function RoomPage() {
     oppValue,
     handlePick,
     categories,
-    rawStats
+    rawStats,
+    oppLeft
   } = useRoom();
 
   if (!isMounted || isLoading) {
@@ -44,6 +45,7 @@ export default function RoomPage() {
         budget={budget} 
         status={status} 
         timer={timer} 
+        oppLeft={oppLeft}
       />
 
       {isDrafting ? (

@@ -4,9 +4,10 @@ interface Props {
   budget?: number;
   status: string | null;
   timer: number;
+  oppLeft?: boolean;
 }
 
-export default function ArenaHeader({ budget, status, timer }: Props) {
+export default function ArenaHeader({ budget, status, timer, oppLeft }: Props) {
   const isEnded = status === "ENDED";
   const isUrgent = status === "DRAFTING" && timer <= 10;
 
@@ -63,8 +64,8 @@ export default function ArenaHeader({ budget, status, timer }: Props) {
             <p className="text-[10px] font-black uppercase tracking-[0.3em] mb-1 text-white/90">
               Match Status
             </p>
-            <div className="text-3xl font-black uppercase italic tracking-tighter text-white leading-none">
-              FINISHED
+            <div className="text-3xl font-black uppercase italic tracking-tighter text-white leading-none text-center">
+              FINISHED {oppLeft && "(OPPONENT LEFT)"}
             </div>
           </div>
         )}
