@@ -24,7 +24,7 @@ export default function RoomNotFound({ roomId }: Props) {
 
         <div className="mb-8 space-y-4">
           <p className="text-gray-500 text-xs font-bold uppercase tracking-widest">
-            The room does not exist or the connection failed.
+            ROOM DELETED DUE TO INACTIVITY OR INVALID ROOM ID
           </p>
           
           <div className="bg-gray-100 p-4 border-2 border-black text-left">

@@ -40,14 +40,24 @@ export function useRoom() {
     if (!isMounted || !myId || !params?.id) return;
     const roomId = params.id as string;
 
-    const syncStates = (data: any) => {
+    const syncStates = async (data: any) => {
       if (!data) return;
+      
+      const inMyTeam = data.p1_id === myId ? data.p1_team || [] : data.p2_team || [];
+      const inOppTeam = data.p1_id === myId ? data.p2_team || [] : data.p1_team || [];
+      const p1Picks = data.p1_team?.length || 0;
+      const p2Picks = data.p2_team?.length || 0;
+
+      if (data.status === "ENDED" && (p1Picks === 0 || p2Picks === 0)) {
+        await supabase.from("room").delete().eq("id", roomId);
+        setRoomExists(false);
+        setIsLoading(false);
+        return;
+      }
+
       setRoomExists(true);
       const isP1 = data.p1_id === myId;
       setRole(isP1 ? "p1" : "p2");
-      
-      const inMyTeam = isP1 ? data.p1_team || [] : data.p2_team || [];
-      const inOppTeam = isP1 ? data.p2_team || [] : data.p1_team || [];
       
       setTeam(inMyTeam);
       setOppTeam(inOppTeam);
