@@ -29,11 +29,11 @@ export default function Home() {
 
   return (
     <div className="flex flex-col lg:flex-row min-h-screen bg-white text-black font-mono overflow-x-hidden">
-      <div className="order-3 lg:order-1 w-full lg:w-80 lg:min-h-screen lg:sticky lg:top-0 border-black flex flex-col">
+      <div className="order-3 lg:order-1 w-full lg:w-80 lg:min-h-screen lg:sticky lg:top-0 flex flex-col">
         <ProtocolList />
       </div>
 
-      <div className="order-1 lg:order-2 flex-1 flex flex-col border-b-4 lg:border-b-0 border-black">
+      <div className="order-1 lg:order-2 flex-1 flex flex-col">
         <MainHero 
           myId={myId}
           username={username}
@@ -44,7 +44,7 @@ export default function Home() {
         />
       </div>
 
-      <div className="order-2 lg:order-3 w-full lg:w-80 border-b-4 lg:border-b-0 lg:border-l-4 border-black bg-gray-50 flex flex-col relative lg:h-screen lg:sticky lg:top-0">
+      <div className="order-2 lg:order-3 w-full lg:w-80 flex flex-col relative lg:h-screen lg:sticky lg:top-0">
         <DuelOverlay challengeStack={challengeStack} onAccept={acceptDuel} onDecline={declineDuel} />
         <PlayerLists 
           onlineUsers={onlineUsers} 

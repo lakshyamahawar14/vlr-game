@@ -45,7 +45,7 @@ const UserCard = memo(({
           ) : (
             <button 
               onClick={() => isWaiting ? onCancelDuel() : onSendDuel(user.id)} 
-              className={`text-[10px] w-20 py-1.5 font-black uppercase border-2 border-black outline-none select-none ${
+              className={`text-[10px] w-20 py-1.5 font-black uppercase border-2 border-black outline-none select-none transition-none ${
                 isWaiting 
                 ? "bg-red-500 text-white hover:bg-red-600" 
                 : "bg-white text-black hover:bg-black hover:text-white"
@@ -66,7 +66,7 @@ export default function PlayerLists({
   onlineUsers, myId, isWaitingForResponse, onSendDuel, onCancelDuel 
 }: Props) {
   return (
-    <aside className="w-full lg:w-80 h-full lg:h-screen flex flex-col bg-white border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
+    <aside className="w-full lg:w-80 h-full lg:h-screen flex flex-col bg-white border-l-4 border-black">
       <div className="p-4 border-b-4 border-black bg-emerald-400">
         <div className="flex justify-between items-center">
           <h2 className="text-xl font-black uppercase text-black leading-none tracking-tight">

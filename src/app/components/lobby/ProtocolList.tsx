@@ -33,7 +33,7 @@ const ProtocolList = memo(function ProtocolList() {
   ];
 
   return (
-    <aside className="w-full lg:w-80 h-full lg:h-screen flex flex-col bg-white border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
+    <aside className="w-full lg:w-80 h-full lg:h-screen flex flex-col bg-white border-r-4 border-black">
       <div className="p-4 border-b-4 border-black bg-indigo-600">
         <div className="flex justify-between items-center">
           <h2 className="text-xl font-black uppercase text-white leading-none tracking-tight">

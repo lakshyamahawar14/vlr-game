@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { memo } from "react";
+import UserProfile from "./UserProfile";
 
-interface Props {
+interface MainHeroProps {
   myId: string;
   username: string;
   setUsername: (name: string) => void;
@@ -11,103 +12,65 @@ interface Props {
   onSaveName: (newName: string) => void;
 }
 
-export default function MainHero({ 
+const MainHero = memo(function MainHero({ 
   myId, 
   username, 
   setUsername, 
   isQueuing, 
   onQueueAction,
   onSaveName 
-}: Props) {
-  const [isEditingName, setIsEditingName] = useState(false);
-
-  const handleConfirm = () => {
-    onSaveName(username);
-    setIsEditingName(false);
-  };
-
+}: MainHeroProps) {
   return (
-    <div className="flex-1 flex flex-col items-center justify-center p-8 bg-white relative overflow-hidden min-h-full w-full">
-      <div className="absolute inset-0 z-0 opacity-[0.03] pointer-events-none select-none flex flex-col items-center justify-center">
-        <span className="text-[30vw] font-black uppercase whitespace-nowrap leading-[0.7]">
-          VLR
-        </span>
-        <span className="text-[30vw] font-black uppercase whitespace-nowrap leading-[0.7]">
-          VLR
-        </span>
-      </div>
+    <div className="flex-1 flex flex-col items-center justify-center p-8 bg-white min-h-full w-full">
+      
+      <UserProfile 
+        myId={myId} 
+        username={username} 
+        setUsername={setUsername} 
+        onSaveName={onSaveName} 
+      />
 
-      <div className="relative z-20 mb-12 flex flex-col items-center gap-2">
-        <p className="text-xs font-black uppercase text-gray-400 tracking-widest">User Profile</p>
-        <div className="flex items-center gap-3 border-b-2 border-black pb-2">
-          {isEditingName ? (
-            <input 
-              value={username} 
-              onChange={(e) => setUsername(e.target.value)} 
-              onBlur={handleConfirm} 
-              onKeyDown={(e) => e.key === "Enter" && handleConfirm()} 
-              autoFocus 
-              maxLength={12} 
-              className="text-2xl font-black uppercase outline-none w-48 bg-yellow-50" 
-            />
-          ) : (
-            <span className="text-2xl font-black uppercase italic">{username}</span>
-          )}
-          <button 
-            onClick={() => isEditingName ? handleConfirm() : setIsEditingName(true)} 
-            className="text-xs bg-black text-white px-3 py-1 font-bold uppercase hover:bg-red-600 transition-colors"
-          >
-            {isEditingName ? "CONFIRM" : "RENAME"}
-          </button>
-        </div>
-        <p className="text-[10px] font-black uppercase text-gray-300">{`User ID: ${myId.slice(0, 8)}`}</p>
-      </div>
-
-      <div className="relative z-10 flex flex-col items-center">
-        <div className="relative mb-2">
-          <h1 className="text-7xl md:text-9xl font-black uppercase tracking-tighter italic text-center leading-none">
-            VLR <span className="text-red-600">DUEL</span>
+      <div className="flex flex-col items-center">
+        <div className="relative mb-6 px-6 py-2">
+          <div className="absolute -top-2 -left-2 w-8 h-8 border-t-8 border-l-8 border-black" />
+          <div className="absolute -bottom-2 -right-2 w-8 h-8 border-b-8 border-r-8 border-black" />
+          
+          <h1 className="text-7xl md:text-9xl font-black uppercase tracking-tighter text-center leading-none">
+            VLR <span className="text-indigo-600">DUEL</span>
           </h1>
-          <div className="absolute -right-4 -top-2 w-12 h-12 border-t-8 border-r-8 border-black hidden md:block" />
-          <div className="absolute -left-4 -bottom-2 w-12 h-12 border-b-8 border-l-8 border-black hidden md:block" />
         </div>
 
-        <div className="flex items-center gap-4 mb-12">
-          <div className="h-[2px] w-8 bg-black" />
-          <p className="text-gray-500 font-black tracking-[0.3em] uppercase text-center text-[10px] md:text-[12px]">
+        <div className="flex items-center gap-4 mb-16">
+          <div className="h-1 w-8 bg-black" />
+          <p className="text-black font-black tracking-widest uppercase text-center text-[10px] md:text-xs">
             Realtime Roster Drafting 1v1 Duel Game
           </p>
-          <div className="h-[2px] w-8 bg-black" />
+          <div className="h-1 w-8 bg-black" />
         </div>
 
-        <div className="relative w-full max-w-xs group">
-          {isQueuing && (
-            <div className="absolute inset-0 bg-red-600 animate-ping opacity-20 blur-xl" />
-          )}
-          
+        <div className="w-full max-w-xs flex flex-col items-center">
           <button
             onClick={onQueueAction}
-            className={`relative w-full py-6 text-3xl font-black uppercase transition-all border-4 border-black group-active:translate-x-0 group-active:translate-y-0 ${
+            className={`w-full py-8 text-4xl font-black uppercase border-4 border-black transition-colors duration-0 outline-none select-none ${
               isQueuing
-                ? "bg-black text-white shadow-[4px_4px_0px_0px_rgba(220,38,38,1)]"
-                : "bg-yellow-300 text-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-1 hover:translate-y-1"
+                ? "bg-red-500 text-white hover:bg-red-600"
+                : "bg-emerald-400 text-black hover:bg-emerald-500"
             }`}
           >
-            {isQueuing ? (
-              <span className="flex items-center justify-center gap-2">
-                <span className="w-2 h-2 bg-red-600 rounded-full animate-pulse" />
-                ABORT
-              </span>
-            ) : (
-              "FIND MATCH"
-            )}
+            {isQueuing ? "ABORT" : "FIND MATCH"}
           </button>
 
-          <p className={`text-center mt-4 text-[10px] font-black uppercase tracking-widest transition-opacity duration-300 ${isQueuing ? "opacity-100 animate-pulse text-red-600" : "opacity-0"}`}>
-            Searching for opponent...
-          </p>
+          <div className="h-8 mt-6">
+            {isQueuing && (
+              <p className="text-center text-xs font-black uppercase tracking-[0.2em] text-red-600">
+                Searching for queue...
+              </p>
+            )}
+          </div>
         </div>
       </div>
     </div>
   );
-}
+});
+
+export default MainHero;
