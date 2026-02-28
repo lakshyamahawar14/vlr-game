@@ -15,7 +15,7 @@ interface Props {
 export default function DraftBoard({ team, oppTeam, budget, onPick, categories }: Props) {
   const sortedCategories = useMemo(() => {
     const entries = Object.entries(categories || {});
-    return entries.sort(([costA], [costB]) => Number(costB) - Number(costA));
+    return entries.sort(() => Math.random() - 0.5);
   }, [categories]);
 
   if (!categories || Object.keys(categories).length === 0) return null;
