@@ -68,13 +68,13 @@ function LeaderboardContent() {
           </Link>
         </div>
 
-        <div className="bg-white border-4 border-black overflow-hidden max-h-[70vh] overflow-y-auto">
-          <table className="w-full text-left border-collapse table-fixed">
+        <div className="bg-white border-4 border-black overflow-x-auto max-h-[70vh] overflow-y-auto">
+          <table className="w-full text-left border-collapse">
             <thead className="sticky top-0 z-10">
-              <tr className="bg-[#A3E635] border-b-4 border-black text-[10px] md:text-xs uppercase font-black">
+              <tr className="bg-[#A3E635] border-b-4 border-black text-[10px] md:text-xs uppercase font-black whitespace-nowrap">
                 <th className="px-3 py-2 w-[50px] text-center border-r-4 border-black">#</th>
                 <th className="px-3 py-2 w-[100px] border-r-4 border-black">UID</th>
-                <th className="px-3 py-2 border-r-4 border-black">Player</th>
+                <th className="px-3 py-2 border-r-4 border-black min-w-[150px]">Player</th>
                 <th className="px-3 py-2 w-[130px] text-center border-r-4 border-black">Total Matches</th>
                 <th className="px-3 py-2 w-[80px] text-center border-r-4 border-black">W-L</th>
                 <th className="px-3 py-2 w-[90px] text-right">Win Rate</th>
@@ -89,7 +89,7 @@ function LeaderboardContent() {
                   <td className="px-3 py-1.5 font-mono text-[9px] border-r-4 border-black text-gray-600">
                     {player.userId?.slice(0, 8)}
                   </td>
-                  <td className="px-3 py-1.5 uppercase truncate border-r-4 border-black">
+                  <td className="px-3 py-1.5 uppercase truncate border-r-4 border-black min-w-[150px]">
                     {player.username}
                   </td>
                   <td className="px-3 py-1.5 text-center border-r-4 border-black">
