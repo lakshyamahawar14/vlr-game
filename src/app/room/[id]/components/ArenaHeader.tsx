@@ -28,9 +28,7 @@ export default function ArenaHeader({ budget, status, timer, oppLeft }: Props) {
         {!isEnded && (
           <>
             <div className="p-4 border-b-[4px] md:border-b-0 md:border-r-[4px] border-black bg-[#5271FF]">
-              <p className="text-[10px] font-black uppercase tracking-widest mb-1 text-white/80">
-                Budget
-              </p>
+              <p className="text-[10px] font-black uppercase tracking-widest mb-1 text-white/80">Budget</p>
               <div className="text-3xl font-black tracking-tight text-white leading-none">
                 ${(budget ?? 0).toLocaleString()}
               </div>
@@ -49,9 +47,7 @@ export default function ArenaHeader({ budget, status, timer, oppLeft }: Props) {
             </div>
 
             <div className="p-4 bg-[#A855F7] flex flex-col md:items-end justify-center">
-              <p className="text-[10px] font-black uppercase tracking-widest mb-1 text-white/80">
-                Phase
-              </p>
+              <p className="text-[10px] font-black uppercase tracking-widest mb-1 text-white/80">Phase</p>
               <div className="text-2xl font-black uppercase italic tracking-tighter text-white leading-none">
                 {status || "Standby"}
               </div>
@@ -61,15 +57,12 @@ export default function ArenaHeader({ budget, status, timer, oppLeft }: Props) {
 
         {isEnded && (
           <div className="p-4 flex flex-col items-center justify-center bg-[#A855F7]">
-            <p className="text-[10px] font-black uppercase tracking-[0.3em] mb-1 text-white/90">
-              Match Status
-            </p>
+            <p className="text-[10px] font-black uppercase tracking-[0.3em] mb-1 text-white/90">Match Status</p>
             <div className="text-3xl font-black uppercase italic tracking-tighter text-white leading-none text-center">
               FINISHED {oppLeft && "(OPPONENT LEFT)"}
             </div>
           </div>
         )}
-
       </div>
     </div>
   );

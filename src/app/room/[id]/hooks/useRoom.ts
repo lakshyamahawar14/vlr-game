@@ -45,6 +45,7 @@ export function useRoom() {
       setRoomExists(true);
       const isP1 = data.p1_id === myId;
       setRole(isP1 ? "p1" : "p2");
+      
       const inMyTeam = isP1 ? data.p1_team || [] : data.p2_team || [];
       const inOppTeam = isP1 ? data.p2_team || [] : data.p1_team || [];
       
@@ -53,7 +54,21 @@ export function useRoom() {
       setBudget(isP1 ? data.p1_budget : data.p2_budget);
       setCategories(data.categories || null);
       setRawStats(data.raw_stats || {});
-      
+
+      const totalPlayers = inMyTeam.length + inOppTeam.length;
+
+      if (totalPlayers >= 10 || data.status === "ENDED") {
+        setTimer(0);
+        setStatus("ENDED");
+        statusRef.current = "ENDED";
+        if (isP1 && data.status !== "ENDED") {
+          supabase.from("room").update({ status: "ENDED" }).eq("id", roomId).then();
+        }
+      } else {
+        setStatus(data.status);
+        statusRef.current = data.status;
+      }
+
       if (data.draft_start_at && data.status === "DRAFTING") {
         const start = new Date(data.draft_start_at).getTime();
         const elapsed = Math.floor((Date.now() - start) / 1000);
@@ -68,17 +83,14 @@ export function useRoom() {
         setOppName(data.p1_name || "WAITING...");
       }
 
-      statusRef.current = data.status;
-      setStatus(data.status);
-
       if (data.status === "ENDED" || (data.categories && Object.keys(data.categories).length > 0)) {
         setIsLoading(false);
       }
     };
 
     const fetchInitial = async () => {
-      const { data, error } = await supabase.from("room").select("*").eq("id", roomId).maybeSingle();
-      if (error || !data) {
+      const { data } = await supabase.from("room").select("*").eq("id", roomId).maybeSingle();
+      if (!data) {
         setRoomExists(false);
         setIsLoading(false);
         return;
@@ -108,31 +120,32 @@ export function useRoom() {
 
     fetchInitial();
 
-    const channel = supabase.channel(`room_${roomId}`, {
+    const channel = supabase.channel(`room_realtime_${roomId}`, {
       config: { presence: { key: myId } },
-    });
-
-    channel
+    })
       .on("postgres_changes", { 
-        event: "UPDATE", 
+        event: "*", 
         schema: "public", 
         table: "room", 
         filter: `id=eq.${roomId}` 
       }, (payload) => {
         syncStates(payload.new);
       })
-      .on("presence", { event: "leave" }, () => {
+      .on("presence", { event: "leave" }, ({ leftPresences }) => {
         if (statusRef.current === "DRAFTING") {
-          statusRef.current = "ENDED";
-          setStatus("ENDED");
-          setTimer(0);
-          setOppLeft(true);
-          supabase.from("room").update({ status: "ENDED" }).eq("id", roomId).then();
+          const isOpponentLeaving = leftPresences.some(p => p.user_id !== myId);
+          if (isOpponentLeaving) {
+            statusRef.current = "ENDED";
+            setStatus("ENDED");
+            setTimer(0);
+            setOppLeft(true);
+            supabase.from("room").update({ status: "ENDED" }).eq("id", roomId).then();
+          }
         }
       })
-      .subscribe(async (subStatus) => {
-        if (subStatus === "SUBSCRIBED") {
-          await channel.track({ online_at: new Date().toISOString(), user_id: myId });
+      .subscribe(async (status) => {
+        if (status === "SUBSCRIBED") {
+          await channel.track({ user_id: myId, online_at: new Date().toISOString() });
         }
       });
 
@@ -161,25 +174,19 @@ export function useRoom() {
     isProcessingPick.current = true;
     const { name, cost } = pickQueue.current[0];
 
-    const { data: success, error } = await supabase.rpc('pick_player', {
-      room_id_input: params.id,
-      player_name: name,
-      player_cost: cost,
-      player_role: role
-    });
-
-    if (error || !success) {
-      const { data: currentRoom } = await supabase.from("room").select("*").eq("id", params.id).single();
-      if (currentRoom) {
-        const isP1 = currentRoom.p1_id === myId;
-        setTeam(isP1 ? currentRoom.p1_team || [] : currentRoom.p2_team || []);
-        setBudget(isP1 ? currentRoom.p1_budget : currentRoom.p2_budget);
-      }
+    try {
+      await supabase.rpc('pick_player', {
+        room_id_input: params.id,
+        player_name: name,
+        player_cost: cost,
+        player_role: role
+      });
+    } catch (e) {
+    } finally {
+      pickQueue.current.shift();
+      isProcessingPick.current = false;
+      processQueue();
     }
-
-    pickQueue.current.shift();
-    isProcessingPick.current = false;
-    processQueue();
   };
 
   const handlePick = async (name: string, cost: number) => {

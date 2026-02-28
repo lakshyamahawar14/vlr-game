@@ -57,7 +57,6 @@ export default function DraftBoard({ team, oppTeam, budget, onPick, categories }
                   >
                     <div className="flex justify-between items-center relative z-10">
                       <span className="text-sm tracking-tighter leading-none">{p}</span>
-
                       {isOpponentPicked ? (
                         <div className="bg-red-600 text-white text-[8px] px-1.5 py-0.5 border border-black">TAKEN</div>
                       ) : isPicked ? (
