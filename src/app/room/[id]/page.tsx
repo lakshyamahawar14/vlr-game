@@ -25,7 +25,7 @@ export default function RoomPage() {
     oppLeft
   } = useRoom();
 
-  if (!isMounted || isLoading || !status || (status === "DRAFTING" && !categories)) {
+  if (!isMounted || (isLoading && !team.length && !oppTeam.length) || !status) {
     return <ArenaLoading />;
   }
 
@@ -49,7 +49,7 @@ export default function RoomPage() {
     );
   }
 
-  if (status === "DRAFTING") {
+  if (status === "DRAFTING" && categories) {
     return (
       <div className="min-h-screen bg-white p-4 font-mono text-black flex flex-col items-center justify-center">
         <div className="w-full max-w-7xl">
@@ -62,7 +62,7 @@ export default function RoomPage() {
             timer={timer}
             status={status}
             handlePick={handlePick}
-            categories={Array.isArray(categories) ? categories : []}
+            categories={categories as any}
             oppLeft={oppLeft}
           />
         </div>

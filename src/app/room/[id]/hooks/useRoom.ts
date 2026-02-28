@@ -30,7 +30,7 @@ export function useRoom() {
 
   const syncStates = useCallback((data: any) => {
     if (!data || !myId) return;
-    setRoomExists(true);
+    
     const isP1 = data.p1_id === myId;
     setRole(isP1 ? "p1" : "p2");
     
@@ -43,19 +43,30 @@ export function useRoom() {
     setCategories(data.categories || null);
     setRawStats(data.raw_stats || {});
 
-    const totalPlayers = (inMyTeam.length || 0) + (inOppTeam.length || 0);
+    const p1Count = (data.p1_team || []).length;
+    const p2Count = (data.p2_team || []).length;
+    const totalPlayers = p1Count + p2Count;
 
     if (data.status === "ENDED" || totalPlayers >= 10) {
+      if (p1Count === 0 || p2Count === 0) {
+        if (isP1) {
+          supabase.from("room").delete().eq("id", data.id).then();
+        }
+        setRoomExists(false);
+      }
+
       setTimer(0);
       setStatus("ENDED");
       statusRef.current = "ENDED";
       setIsLoading(false);
-      if (isP1 && data.status !== "ENDED") {
+      
+      if (isP1 && data.status !== "ENDED" && p1Count > 0 && p2Count > 0) {
         supabase.from("room").update({ status: "ENDED" }).eq("id", data.id).then();
       }
       return; 
     }
 
+    setRoomExists(true);
     setStatus(data.status);
     statusRef.current = data.status;
 
@@ -174,6 +185,15 @@ export function useRoom() {
         filter: `id=eq.${roomId}` 
       }, (payload) => {
         syncStates(payload.new);
+      })
+      .on("postgres_changes", {
+        event: "DELETE",
+        schema: "public",
+        table: "room",
+        filter: `id=eq.${roomId}`
+      }, () => {
+        setRoomExists(false);
+        setStatus("ENDED");
       })
       .on("presence", { event: "leave" }, ({ leftPresences }) => {
         if (statusRef.current === "DRAFTING") {
