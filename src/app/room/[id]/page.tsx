@@ -25,7 +25,7 @@ export default function RoomPage() {
     oppLeft
   } = useRoom();
 
-  if (!isMounted || isLoading || status === null) {
+  if (!isMounted || isLoading || !status || (status === "DRAFTING" && !categories)) {
     return <ArenaLoading />;
   }
 
@@ -49,7 +49,7 @@ export default function RoomPage() {
     );
   }
 
-  if (status === "WAITING" || status === "DRAFTING") {
+  if (status === "DRAFTING") {
     return (
       <div className="min-h-screen bg-white p-4 font-mono text-black flex flex-col items-center justify-center">
         <div className="w-full max-w-7xl">
