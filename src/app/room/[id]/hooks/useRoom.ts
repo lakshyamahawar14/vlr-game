@@ -57,6 +57,13 @@ export function useRoom() {
     const p1Count = (data.p1_team || []).length;
     const p2Count = (data.p2_team || []).length;
 
+    if (p1Count === 5 && p2Count === 5 && data.status === "DRAFTING") {
+      if (isP1) {
+        supabase.from("room").update({ status: "ENDED" }).eq("id", data.id).then();
+      }
+      return;
+    }
+
     if (data.status === "ENDED") {
       const prevStatus = statusRef.current;
       statusRef.current = "ENDED";
