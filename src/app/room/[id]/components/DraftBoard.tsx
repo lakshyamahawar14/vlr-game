@@ -74,7 +74,7 @@ export default function DraftBoard({
                           : isPicked
                           ? "bg-emerald-400 border-black"
                           : isOpponentPicked
-                          ? "bg-gray-100 border-gray-200 opacity-50 cursor-not-allowed grayscale"
+                          ? "bg-red-500 border-black text-white opacity-100 cursor-not-allowed"
                           : !canAfford
                           ? "bg-white border-dashed border-gray-200 text-gray-300 cursor-not-allowed"
                           : "bg-white border-black hover:bg-yellow-300"
@@ -89,7 +89,7 @@ export default function DraftBoard({
                           WAITING
                         </div>
                       ) : isOpponentPicked ? (
-                        <div className="bg-red-600 text-white text-[8px] px-1.5 py-0.5 border border-black leading-none">
+                        <div className="bg-black text-white text-[8px] px-1.5 py-0.5 border border-black leading-none">
                           TAKEN
                         </div>
                       ) : isPicked ? (
