@@ -50,7 +50,7 @@ export default function Arena({
 
       {isDrafting && (
         <div className="flex flex-col lg:flex-row gap-6">
-          <div className="flex-1">
+          <div className="flex-1 order-2 lg:order-1">
             <TeamDisplay
               name={myName}
               value={team.reduce((a, p) => a + p.cost, 0)}
@@ -59,7 +59,7 @@ export default function Arena({
             />
           </div>
 
-          <div className="flex-[2]">
+          <div className="flex-[2] order-1 lg:order-2">
             <DraftBoard
               team={team}
               oppTeam={oppTeam}
@@ -70,7 +70,7 @@ export default function Arena({
             />
           </div>
 
-          <div className="flex-1">
+          <div className="flex-1 order-3 lg:order-3">
             <TeamDisplay
               name={oppName}
               value={oppTeam.reduce((a, p) => a + p.cost, 0)}

@@ -26,12 +26,16 @@ export default function RoomPage() {
     results
   } = useRoom();
 
-  if (!isMounted || (isLoading && !team.length && !oppTeam.length) || !status) {
+  if (!isMounted) {
     return <ArenaLoading />;
   }
 
   if (!roomExists) {
     return <RoomNotFound roomId={params.id as string} />;
+  }
+
+  if (isLoading || status === "WAITING") {
+    return <ArenaLoading hasPool={!!categories} />;
   }
 
   if (status === "ENDED") {
@@ -49,7 +53,7 @@ export default function RoomPage() {
             />
           ) : (
             <div className="flex flex-col items-center justify-center p-12 border-[4px] border-black bg-white shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
-              <div className="w-10 h-10 border-4 border-black border-t-yellow-400 rounded-full animate-spin mb-4"></div>
+              <div className="w-10 h-10 border-4 border-black border-t-red-600 rounded-full animate-spin mb-4"></div>
               <h2 className="text-xl font-black uppercase italic">Calculating Results...</h2>
             </div>
           )}

@@ -14,17 +14,17 @@ export default function RoomNotFound({ roomId }: Props) {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 font-mono">
-      <div className="w-full max-w-xl border-4 border-black p-8 md:p-12 text-center bg-white">
+    <div className="min-h-screen flex items-center justify-center p-4 font-mono bg-white">
+      <div className="w-full max-w-xl border-4 border-black p-8 md:p-12 text-center bg-white shadow-[10px_10px_0px_0px_rgba(0,0,0,1)]">
         <div className="mb-6">
           <h2 className="text-4xl md:text-5xl font-black uppercase italic tracking-tighter leading-none">
-            ROOM <span className="text-red-600">NOT FOUND</span>
+            ROOM <span className="text-red-600">EXPIRED</span>
           </h2>
         </div>
 
         <div className="mb-8 space-y-4">
           <p className="text-gray-500 text-xs font-bold uppercase tracking-widest">
-            ROOM DELETED DUE TO INACTIVITY OR INVALID ROOM ID
+            INACTIVITY TIMEOUT OR INVALID SESSION ID
           </p>
           
           <div className="bg-gray-100 p-4 border-2 border-black text-left">
