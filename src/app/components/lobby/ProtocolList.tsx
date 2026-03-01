@@ -28,7 +28,7 @@ const ProtocolList = memo(function ProtocolList() {
     },
     { 
       id: "07", 
-      rule: "If you gets stuck while joining a match, or data is not visible, just RELOAD the website or queue in another match."
+      rule: "If you get stuck on loading screen, just RELOAD the website or queue in another match."
     },
   ];
 
