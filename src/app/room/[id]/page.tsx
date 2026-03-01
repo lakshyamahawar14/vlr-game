@@ -22,7 +22,8 @@ export default function RoomPage() {
     handlePick,
     categories,
     rawStats,
-    oppLeft
+    oppLeft,
+    results
   } = useRoom();
 
   if (!isMounted || (isLoading && !team.length && !oppTeam.length) || !status) {
@@ -37,13 +38,21 @@ export default function RoomPage() {
     return (
       <div className="min-h-screen bg-white p-4 font-mono text-black flex flex-col items-center justify-center">
         <div className="w-full max-w-5xl">
-          <ResultScreen
-            myName={myName}
-            oppName={oppName}
-            myTeam={team}
-            oppTeam={oppTeam}
-            rawStats={rawStats}
-          />
+          {results ? (
+            <ResultScreen
+              myName={myName}
+              oppName={oppName}
+              myTeam={team}
+              oppTeam={oppTeam}
+              rawStats={rawStats}
+              results={results}
+            />
+          ) : (
+            <div className="flex flex-col items-center justify-center p-12 border-[4px] border-black bg-white shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
+              <div className="w-10 h-10 border-4 border-black border-t-yellow-400 rounded-full animate-spin mb-4"></div>
+              <h2 className="text-xl font-black uppercase italic">Calculating Results...</h2>
+            </div>
+          )}
         </div>
       </div>
     );
