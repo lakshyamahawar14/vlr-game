@@ -89,7 +89,6 @@ export function useRoom() {
           isDraw: data.winner_id === drawId
         });
       }
-      return; 
     }
 
     setRoomExists(true);
@@ -109,10 +108,12 @@ export function useRoom() {
 
     if (isP1) {
       if (data.p1_name) setMyName(data.p1_name);
-      setOppName(data.p2_name || "WAITING...");
+      if (data.p2_name) setOppName(data.p2_name);
+      else setOppName(prev => (prev === "ENEMY" ? "WAITING..." : prev));
     } else {
       if (data.p2_name) setMyName(data.p2_name);
-      setOppName(data.p1_name || "WAITING...");
+      if (data.p1_name) setOppName(data.p1_name);
+      else setOppName(prev => (prev === "ENEMY" ? "WAITING..." : prev));
     }
   }, [myId]);
 
