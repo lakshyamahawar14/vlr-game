@@ -1,60 +1,17 @@
 "use client";
 
-import { useEffect, useState, Suspense } from "react";
+import { Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-
-interface LeaderboardEntry {
-  rank: number;
-  userId: string;
-  username: string;
-  matches: number;
-  wins: number;
-  loses: number;
-  draws: number;
-  avgScore: number;
-  winRate: number;
-}
+import { Button } from "src/components/ui/Button";
+import { useLeaderboard } from "./hooks/useLeaderboard";
+import { LeaderboardTable } from "./components/LeaderboardTable";
 
 function LeaderboardContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const page = parseInt(searchParams.get("page") || "1");
-  
-  const [data, setData] = useState<LeaderboardEntry[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [hasMore, setHasMore] = useState(false);
-  const [localUserId, setLocalUserId] = useState<string | null>(null);
-  const PAGE_LIMIT = 25;
-
-  useEffect(() => {
-    const storedId = localStorage.getItem("vlr_duel_id");
-    if (storedId) setLocalUserId(storedId);
-  }, []);
-
-  useEffect(() => {
-    async function fetchLeaderboard() {
-      setLoading(true);
-      try {
-        const res = await fetch(`/api/leaderboard?page=${page}`);
-        const json = await res.json();
-        
-        if (Array.isArray(json)) {
-          setData(json);
-          setHasMore(json.length === PAGE_LIMIT);
-        } else {
-          setData([]);
-          setHasMore(false);
-        }
-      } catch (err) {
-        setData([]);
-        setHasMore(false);
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchLeaderboard();
-  }, [page]);
+  const { data, loading, hasMore, localUserId } = useLeaderboard(page);
 
   const handlePageChange = (newPage: number) => {
     if (newPage < 1) return;
@@ -62,110 +19,66 @@ function LeaderboardContent() {
   };
 
   return (
-    <div className="min-h-screen text-black p-4 md:p-8 font-mono">
-      <div className="max-w-4xl mx-auto">
-        
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-          <div className="bg-black text-white p-3 border-4 border-black">
-            <h1 className="text-2xl md:text-3xl font-black uppercase tracking-tighter italic">
-              LEADERBOARD
-            </h1>
-          </div>
-          <Link 
-            href="/" 
-            className="bg-[#FF3E3E] text-white px-4 py-2 text-xs font-black uppercase border-4 border-black hover:bg-[#CC0000] transition-colors"
-          >
-            Back to Lobby
+    <div className="min-h-screen bg-[#F2F2F2] text-black p-4 md:p-8 font-sans overflow-x-hidden relative">
+      <div className="absolute inset-0 z-0 opacity-[0.07] pointer-events-none" 
+           style={{ 
+             backgroundImage: `
+               linear-gradient(to right, #4f46e5 1px, transparent 1px),
+               linear-gradient(to bottom, #4f46e5 1px, transparent 1px)
+             `, 
+             backgroundSize: '32px 32px' 
+           }} 
+      />
+
+      <div className="max-w-5xl mx-auto relative z-10">
+        <div className="flex flex-col md:flex-row justify-between items-end mb-8 gap-4 border-b-4 border-black pb-4">
+          <h1 className="text-4xl md:text-6xl font-black uppercase tracking-tighter italic leading-none">
+            LEADER<span className="text-indigo-600">BOARD</span>
+          </h1>
+          <Link href="/">
+            <Button className="!bg-black !text-white border-2 !border-black hover:!bg-white hover:!text-black transition-all font-black uppercase tracking-tighter">
+              Back to Lobby
+            </Button>
           </Link>
         </div>
 
-        <div className="bg-white border-4 border-black overflow-x-auto max-h-[70vh] overflow-y-auto">
-          <table className="w-full text-left border-collapse">
-            <thead className="sticky top-0 z-10">
-              <tr className="bg-[#A3E635] border-b-4 border-black text-[10px] md:text-xs uppercase font-black whitespace-nowrap">
-                <th className="px-3 py-2 w-[50px] text-center border-r-4 border-black">#</th>
-                <th className="px-3 py-2 w-[110px] border-r-4 border-black">USER ID</th>
-                <th className="px-3 py-2 border-r-4 border-black min-w-[180px]">Player</th>
-                <th className="px-3 py-2 w-[100px] text-center border-r-4 border-black">Matches</th>
-                <th className="px-3 py-2 w-[100px] text-center border-r-4 border-black">W-L-D</th>
-                <th className="px-3 py-2 w-[100px] text-center border-r-4 border-black">Avg Score</th>
-                <th className="px-3 py-2 w-[90px] text-right">Win Rate</th>
-              </tr>
-            </thead>
-            <tbody className="text-xs md:text-sm font-bold">
-              {!loading && data.map((player) => {
-                const isMe = player.userId === localUserId;
-                return (
-                  <tr 
-                    key={player.userId} 
-                    className={`border-b-2 border-black ${
-                      isMe ? "bg-[#FFD700]" : "bg-white"
-                    }`}
-                  >
-                    <td className="px-3 py-1.5 text-center border-r-4 border-black italic">
-                      {player.rank}
-                    </td>
-                    <td className={`px-3 py-1.5 font-mono text-[9px] border-r-4 border-black uppercase ${isMe ? "text-black" : "text-gray-600"}`}>
-                      {player.userId?.slice(0, 8).toUpperCase()}
-                    </td>
-                    <td className="px-3 py-1.5 uppercase truncate border-r-4 border-black min-w-[180px]">
-                      {player.username} {isMe ? "(YOU)" : ""}
-                    </td>
-                    <td className="px-3 py-1.5 text-center border-r-4 border-black">
-                      {player.matches}
-                    </td>
-                    <td className="px-3 py-1.5 text-center border-r-4 border-black whitespace-nowrap">
-                      {player.wins}-{player.loses}-{player.draws}
-                    </td>
-                    <td className="px-3 py-1.5 text-center border-r-4 border-black">
-                      {player.avgScore.toFixed(2)}
-                    </td>
-                    <td className={`px-3 py-1.5 text-right font-black ${isMe ? "text-black" : "text-blue-600"}`}>
-                      {player.winRate}%
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+        <LeaderboardTable data={data} localUserId={localUserId} loading={loading} />
 
-          {loading && (
-            <div className="flex items-center justify-center py-20 bg-white">
-               <div className="text-sm font-black uppercase border-4 border-black p-3 bg-yellow-300">
-                 Syncing...
-               </div>
-            </div>
-          )}
-
-          {!loading && data.length === 0 && (
-            <div className="text-center py-12 bg-white">
-              <p className="text-xs font-black uppercase border-4 border-black inline-block p-2">No entries</p>
-            </div>
-          )}
-        </div>
-
-        <div className="flex justify-center items-center mt-6 gap-3">
-          <button 
-            onClick={() => handlePageChange(page - 1)}
-            disabled={page <= 1 || loading}
-            className="px-4 py-2 bg-[#60A5FA] border-4 border-black text-[10px] font-black uppercase disabled:opacity-30 hover:bg-[#3B82F6] transition-colors"
-          >
-            Prev
-          </button>
-          
-          <div className="bg-black text-white px-4 py-2 border-4 border-black text-[10px] font-black uppercase">
-            Page {page}
+        <div className="flex justify-between items-center mt-8">
+          <div className="hidden md:flex gap-2">
+            <div className="w-2 h-8 bg-black" />
+            <div className="w-1 h-8 bg-black/20" />
           </div>
 
-          <button 
-            onClick={() => handlePageChange(page + 1)}
-            disabled={!hasMore || loading}
-            className="px-4 py-2 bg-[#60A5FA] border-4 border-black text-[10px] font-black uppercase disabled:opacity-30 hover:bg-[#3B82F6] transition-colors"
-          >
-            Next
-          </button>
-        </div>
+          <div className="flex items-center gap-4 w-full md:w-auto justify-center">
+            <Button 
+              className="!bg-black !text-white border-2 !border-black disabled:opacity-30 font-black"
+              size="sm"
+              onClick={() => handlePageChange(page - 1)}
+              disabled={page <= 1 || loading}
+            >
+              PREV
+            </Button>
+            
+            <div className="bg-white px-6 py-1.5 border-2 border-black text-xs font-black uppercase shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+              PAGE <span className="text-indigo-600">{page}</span>
+            </div>
 
+            <Button 
+              className="!bg-black !text-white border-2 !border-black disabled:opacity-30 font-black"
+              size="sm"
+              onClick={() => handlePageChange(page + 1)}
+              disabled={!hasMore || loading}
+            >
+              NEXT
+            </Button>
+          </div>
+
+          <div className="hidden md:flex gap-2">
+            <div className="w-1 h-8 bg-black/20" />
+            <div className="w-2 h-8 bg-black" />
+          </div>
+        </div>
       </div>
     </div>
   );

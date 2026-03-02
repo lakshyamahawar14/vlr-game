@@ -30,47 +30,67 @@ export default function ResultScreen({
 }: Props) {
   const { myScore, oppScore, winnerName, iWon, oppWon, isDraw } = results;
 
+  const getStatBadgeClass = (side: "me" | "opp") => {
+    if (isDraw) return "bg-black text-white";
+    if (side === "me") {
+      return iWon ? "bg-[#A3E635] text-black" : "bg-red-600 text-white";
+    } else {
+      return oppWon ? "bg-[#A3E635] text-black" : "bg-red-600 text-white";
+    }
+  };
+
   return (
-    <div className="flex items-center justify-center min-h-[80vh] w-full p-4">
-      <div className="w-full max-w-5xl bg-white border-[4px] border-black font-mono flex flex-col shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
+    <div className="flex items-center justify-center min-h-screen w-full p-4 bg-[#F2F2F2] relative overflow-hidden font-sans">
+      <div 
+        className="absolute inset-0 z-0 opacity-[0.07] pointer-events-none" 
+        style={{ 
+          backgroundImage: `
+            linear-gradient(to right, #4f46e5 1px, transparent 1px),
+            linear-gradient(to bottom, #4f46e5 1px, transparent 1px)
+          `, 
+          backgroundSize: '32px 32px' 
+        }} 
+      />
+      
+      <div className="w-full max-w-5xl bg-white border-4 border-black flex flex-col shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] relative z-10">
+        
         <div
-          className={`border-b-[4px] border-black p-3 flex flex-col items-center justify-center text-black ${
-            iWon ? "bg-[#22C55E]" : oppWon ? "bg-red-500" : "bg-yellow-400"
+          className={`border-b-4 border-black p-4 flex flex-col items-center justify-center text-black relative ${
+            iWon ? "bg-[#A3E635]" : oppWon ? "bg-red-600" : "bg-yellow-400"
           }`}
         >
-          <p className="text-[10px] font-black uppercase tracking-[0.3em] mb-0.5 opacity-90">
-            {isDraw ? "Match Result" : "Winner"}
+          <p className="text-[10px] font-black uppercase tracking-[0.4em] mb-1 text-black/60">
+            {isDraw ? "MATCH DRAWN" : "VICTOR IDENTIFIED"}
           </p>
-          <h1 className="text-2xl md:text-4xl font-black uppercase italic tracking-tighter leading-none text-center">
-            {winnerName}
+          <h1 className="text-3xl md:text-5xl font-black uppercase italic tracking-tighter leading-none text-center">
+            {isDraw ? "NO WINNER" : winnerName}
           </h1>
         </div>
 
-        <div className="flex flex-col md:flex-row divide-y-[4px] md:divide-y-0 md:divide-x-[4px] divide-black">
-          <div className={`flex-1 p-4 md:p-6 ${iWon ? "bg-emerald-50/50" : oppWon ? "bg-red-50/50" : "bg-gray-50/50"}`}>
-            <div className="flex justify-between items-center mb-4 border-b-2 border-black/10 pb-2">
-              <div className="flex flex-col">
-                <h2 className="text-lg font-black uppercase tracking-tighter leading-none">{myName}</h2>
-                <span className="text-[10px] font-bold text-gray-400 uppercase">Your Roster</span>
+        <div className="flex flex-col md:grid md:grid-cols-2 divide-y-4 md:divide-y-0 md:divide-x-4 divide-black">
+          
+          <div className="p-4">
+            <div className="flex justify-between items-end mb-4">
+              <div>
+                <h2 className="text-xl font-black uppercase italic tracking-tighter leading-none">{myName}</h2>
+                <span className="text-[9px] font-black text-neutral-400 uppercase tracking-widest mt-1 block">YOUR ROSTER</span>
               </div>
               <div className="text-right">
-                <span className={`text-[10px] block font-black ${iWon ? "text-emerald-600" : oppWon ? "text-red-600" : "text-gray-600"}`}>
-                  TOTAL RATING
-                </span>
-                <span className={`text-3xl font-black italic leading-none ${iWon ? "text-emerald-600" : oppWon ? "text-red-600" : "text-black"}`}>
+                <span className="text-[9px] block font-black text-neutral-400 uppercase tracking-widest">FINAL SCORE</span>
+                <span className={`text-3xl font-black italic leading-none ${isDraw ? "text-black" : iWon ? "text-[#A3E635]" : "text-red-600"}`}>
                   {myScore.toFixed(2)}
                 </span>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 gap-2">
+            <div className="space-y-2">
               {myTeam.map((p) => (
-                <div key={p.name} className="flex justify-between items-center p-2 border-2 border-black bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
-                  <span className="text-sm font-black uppercase">{p.name}</span>
-                  <div className="flex items-center gap-3">
-                    <span className="text-[10px] font-bold text-gray-400 leading-none">${p.cost}</span>
-                    <span className={`text-xs font-black px-2 py-0.5 border-2 border-black ${iWon ? "bg-emerald-500 text-white" : oppWon ? "bg-red-500 text-white" : "bg-black text-white"}`}>
-                      R {(rawStats[p.name.toLowerCase()] || 0).toFixed(2)}
+                <div key={p.name} className="flex justify-between items-center p-2 border-2 border-black bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-0.5 transition-transform">
+                  <span className="text-xs font-black uppercase tracking-tight truncate mr-2">{p.name}</span>
+                  <div className="flex items-center gap-3 shrink-0">
+                    <span className="text-[9px] font-black text-neutral-300">${p.cost}</span>
+                    <span className={`text-[10px] font-black px-2 py-0.5 border-2 border-black ${getStatBadgeClass("me")}`}>
+                      {(rawStats[p.name.toLowerCase()] || 0).toFixed(2)}
                     </span>
                   </div>
                 </div>
@@ -78,30 +98,28 @@ export default function ResultScreen({
             </div>
           </div>
 
-          <div className={`flex-1 p-4 md:p-6 ${oppWon ? "bg-emerald-50/50" : iWon ? "bg-red-50/50" : "bg-gray-50/50"}`}>
-            <div className="flex justify-between items-center mb-4 border-b-2 border-black/10 pb-2">
-              <div className="flex flex-col">
-                <h2 className="text-lg font-black uppercase tracking-tighter leading-none">{oppName}</h2>
-                <span className="text-[10px] font-bold text-gray-400 uppercase">Enemy Roster</span>
+          <div className="p-4">
+            <div className="flex justify-between items-end mb-4">
+              <div>
+                <h2 className="text-xl font-black uppercase italic tracking-tighter leading-none">{oppName}</h2>
+                <span className="text-[9px] font-black text-neutral-400 uppercase tracking-widest mt-1 block">ENEMY ROSTER</span>
               </div>
               <div className="text-right">
-                <span className={`text-[10px] block font-black ${oppWon ? "text-emerald-600" : iWon ? "text-red-600" : "text-gray-600"}`}>
-                  TOTAL RATING
-                </span>
-                <span className={`text-3xl font-black italic leading-none ${oppWon ? "text-emerald-600" : iWon ? "text-red-600" : "text-black"}`}>
+                <span className="text-[9px] block font-black text-neutral-400 uppercase tracking-widest">FINAL SCORE</span>
+                <span className={`text-3xl font-black italic leading-none ${isDraw ? "text-black" : oppWon ? "text-[#A3E635]" : "text-red-600"}`}>
                   {oppScore.toFixed(2)}
                 </span>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 gap-2">
+            <div className="space-y-2">
               {oppTeam.map((p) => (
-                <div key={p.name} className="flex justify-between items-center p-2 border-2 border-black bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
-                  <span className="text-sm font-black uppercase">{p.name}</span>
-                  <div className="flex items-center gap-3">
-                    <span className="text-[10px] font-bold text-gray-400 leading-none">${p.cost}</span>
-                    <span className={`text-xs font-black px-2 py-0.5 border-2 border-black ${oppWon ? "bg-emerald-500 text-white" : iWon ? "bg-red-500 text-white" : "bg-black text-white"}`}>
-                      R {(rawStats[p.name.toLowerCase()] || 0).toFixed(2)}
+                <div key={p.name} className="flex justify-between items-center p-2 border-2 border-black bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:-translate-x-0.5 transition-transform">
+                  <span className="text-xs font-black uppercase tracking-tight truncate mr-2">{p.name}</span>
+                  <div className="flex items-center gap-3 shrink-0">
+                    <span className="text-[9px] font-black text-neutral-300">${p.cost}</span>
+                    <span className={`text-[10px] font-black px-2 py-0.5 border-2 border-black ${getStatBadgeClass("opp")}`}>
+                      {(rawStats[p.name.toLowerCase()] || 0).toFixed(2)}
                     </span>
                   </div>
                 </div>
@@ -110,9 +128,12 @@ export default function ResultScreen({
           </div>
         </div>
 
-        <div className="p-6 border-t-[4px] border-black bg-white flex justify-center">
-          <Link href="/" className="w-full max-w-[200px] py-3 text-sm font-black uppercase border-4 border-black bg-yellow-400 text-black hover:bg-yellow-500 text-center transition-colors">
-            Return to Lobby
+        <div className="p-6 border-t-4 border-black bg-neutral-50 flex justify-center">
+          <Link href="/" className="group relative inline-block">
+            <div className="absolute inset-0 bg-black translate-x-1 translate-y-1 group-hover:translate-x-1.5 group-hover:translate-y-1.5 transition-transform" />
+            <div className="relative px-10 py-3 bg-yellow-400 border-2 border-black text-xs font-black uppercase tracking-[0.2em] group-active:translate-x-0.5 group-active:translate-y-0.5 transition-all text-center">
+              Return to Lobby
+            </div>
           </Link>
         </div>
       </div>

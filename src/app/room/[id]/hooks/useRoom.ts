@@ -41,6 +41,12 @@ export function useRoom() {
 
   const syncStates = useCallback((data: any) => {
     if (!data || !myId) return;
+
+    if (statusRef.current !== data.status) {
+      console.log(`[${new Date().toLocaleTimeString()}] Room Status Changed: ${data.status}`);
+      statusRef.current = data.status;
+      setStatus(data.status);
+    }
     
     const isP1 = data.p1_id === myId;
     setRole(isP1 ? "p1" : "p2");
@@ -65,17 +71,8 @@ export function useRoom() {
     }
 
     if (data.status === "ENDED") {
-      const prevStatus = statusRef.current;
-      statusRef.current = "ENDED";
-      setStatus("ENDED");
       setTimer(0);
       setIsLoading(false);
-
-      if ((p1Count === 0 || p2Count === 0) && (prevStatus === "DRAFTING" || (data.p1_joined && data.p2_joined))) {
-        if (isP1) supabase.from("room").delete().eq("id", data.id).then();
-        setRoomExists(false);
-        return;
-      }
 
       if (data.winner_id) {
         const drawId = "00000000-0000-0000-0000-000000000000";
@@ -99,14 +96,11 @@ export function useRoom() {
     }
 
     setRoomExists(true);
-    setStatus(data.status);
-    statusRef.current = data.status;
 
     if (data.draft_start_at && data.status === "DRAFTING") {
       const start = new Date(data.draft_start_at).getTime();
       const elapsed = Math.floor((Date.now() - start) / 1000);
-      const remaining = Math.max(0, 30 - elapsed);
-      setTimer(remaining);
+      setTimer(Math.max(0, 30 - elapsed));
       setIsLoading(false);
     } else {
       setTimer(30);
@@ -138,24 +132,16 @@ export function useRoom() {
     const roomId = params.id as string;
 
     const setupRoom = async () => {
-      const { data: room } = await supabase.from("room").select("*").eq("id", roomId).maybeSingle();
+      const { data: room, error: fetchError } = await supabase.from("room").select("*").eq("id", roomId).maybeSingle();
       
-      if (!room) { 
+      if (fetchError || !room) { 
         setRoomExists(false); 
         setIsLoading(false); 
         return; 
       }
 
       if (room.status === "ENDED") {
-        const p1C = (room.p1_team || []).length;
-        const p2C = (room.p2_team || []).length;
-        if (p1C === 0 || p2C === 0) {
-          setRoomExists(false);
-          setIsLoading(false);
-          return;
-        }
         syncStates(room);
-        setRoomExists(true);
         setIsLoading(false);
         return;
       }
@@ -186,6 +172,9 @@ export function useRoom() {
         .on("postgres_changes", { event: "UPDATE", schema: "public", table: "room", filter: `id=eq.${roomId}` }, (p) => {
             syncStates(p.new);
         })
+        .on("postgres_changes", { event: "DELETE", schema: "public", table: "room", filter: `id=eq.${roomId}` }, () => {
+            setRoomExists(false);
+        })
         .on("presence", { event: "sync" }, async () => {
           const state = channel.presenceState();
           const userCount = Object.keys(state).length;
@@ -209,7 +198,9 @@ export function useRoom() {
             leaveTimeoutRef.current = setTimeout(() => {
               setOppLeft(true);
               setTimer(0);
-              supabase.from("room").update({ status: "ENDED" }).eq("id", roomId).then();
+              supabase.from("room").delete().eq("id", roomId).then(() => {
+                setRoomExists(false);
+              });
             }, 5000);
           }
         })
@@ -238,38 +229,40 @@ export function useRoom() {
     return () => clearInterval(interval);
   }, [role, params.id]);
 
-  useEffect(() => {
-    if (!isMounted || (status !== "WAITING" && status !== "READY")) return;
-    const interval = setInterval(async () => {
-      const { data } = await supabase.from("room").select("status").eq("id", params.id).single();
-      if (data && data.status !== statusRef.current) {
-         const { data: fullData } = await supabase.from("room").select("*").eq("id", params.id).single();
-         if (fullData) syncStates(fullData);
-      }
-    }, 2000);
-    return () => clearInterval(interval);
-  }, [status, isMounted, params.id, syncStates]);
-
   const processQueue = async () => {
     if (isProcessingPick.current || pickQueue.current.length === 0) return;
     isProcessingPick.current = true;
-    const { name, cost } = pickQueue.current[0];
+    const currentPick = pickQueue.current[0];
+    
     try {
-      await supabase.rpc('pick_player', { room_id_input: params.id, player_name: name, player_cost: cost, player_role: role });
-    } finally {
+      const { error } = await supabase.rpc('pick_player', { 
+        room_id_input: params.id, 
+        player_name: currentPick.name, 
+        player_cost: currentPick.cost, 
+        player_role: role 
+      });
+
+      if (error) throw error;
       pickQueue.current.shift();
+    } catch (e) {
+      pickQueue.current.shift();
+    } finally {
       isProcessingPick.current = false;
-      processQueue();
+      if (pickQueue.current.length > 0) processQueue();
     }
   };
 
   const handlePick = async (name: string, cost: number) => {
-    if (!params?.id || !role || status !== "DRAFTING" || team.length >= 5 || budget < cost) return;
+    if (!params?.id || !role || statusRef.current !== "DRAFTING" || team.length >= 5 || budget < cost) return;
     if (team.some(p => p.name === name) || oppTeam.some(p => p.name === name)) return;
+    
     setTeam(prev => [...prev, { name, cost }]);
     setBudget(prev => prev - cost);
     pickQueue.current.push({ name, cost });
-    processQueue();
+    
+    if (!isProcessingPick.current) {
+      processQueue();
+    }
   };
 
   const myValue = useMemo(() => team.reduce((acc, p) => acc + p.cost, 0), [team]);

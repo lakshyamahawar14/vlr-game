@@ -35,12 +35,12 @@ export default function Home() {
         onAccept={acceptDuel} 
         onDecline={declineDuel} 
       />
-
-      <div className="order-3 lg:order-1 w-full lg:w-80 lg:min-h-screen lg:sticky lg:top-0 flex flex-col">
+      
+      <div className="order-3 lg:order-1 w-full lg:w-80 lg:sticky lg:top-0 lg:h-screen flex flex-col">
         <ProtocolList />
       </div>
 
-      <div className="order-1 lg:order-2 flex-1 flex flex-col">
+      <div className="order-1 lg:order-2 flex-1 flex flex-col min-h-screen lg:min-h-0">
         <MainHero 
           myId={myId}
           username={username}
@@ -51,7 +51,7 @@ export default function Home() {
         />
       </div>
 
-      <div className="order-2 lg:order-3 w-full lg:w-80 flex flex-col relative lg:h-screen lg:sticky lg:top-0">
+      <div className="order-2 lg:order-3 w-full lg:w-80 lg:sticky lg:top-0 lg:h-screen flex flex-col bg-white">
         <PlayerLists 
           onlineUsers={onlineUsers} 
           myId={myId} 

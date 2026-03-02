@@ -27,61 +27,74 @@ export default function RoomPage() {
   } = useRoom();
 
   if (!isMounted) {
-    return <ArenaLoading />;
+    return (
+      <div className="min-h-screen w-full flex items-center justify-center">
+        <ArenaLoading />
+      </div>
+    );
   }
 
   if (!roomExists) {
-    return <RoomNotFound roomId={params.id as string} />;
+    return (
+      <main className="min-h-screen w-full flex items-center justify-center">
+        <RoomNotFound roomId={params.id as string} />
+      </main>
+    );
   }
 
   if (isLoading || status === "WAITING") {
-    return <ArenaLoading hasPool={!!categories} />;
+    return (
+      <div className="min-h-screen w-full flex items-center justify-center">
+        <ArenaLoading hasPool={!!categories} />
+      </div>
+    );
   }
 
   if (status === "ENDED") {
     return (
-      <div className="min-h-screen bg-white p-4 font-mono text-black flex flex-col items-center justify-center">
-        <div className="w-full max-w-5xl">
-          {results ? (
-            <ResultScreen
-              myName={myName}
-              oppName={oppName}
-              myTeam={team}
-              oppTeam={oppTeam}
-              rawStats={rawStats}
-              results={results}
-            />
-          ) : (
-            <div className="flex flex-col items-center justify-center p-12 border-[4px] border-black bg-white shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
-              <div className="w-10 h-10 border-4 border-black border-t-red-600 rounded-full animate-spin mb-4"></div>
-              <h2 className="text-xl font-black uppercase italic">Calculating Results...</h2>
-            </div>
-          )}
-        </div>
-      </div>
+      <main className="min-h-screen w-full flex items-center justify-center">
+        {results ? (
+          <ResultScreen
+            myName={myName}
+            oppName={oppName}
+            myTeam={team}
+            oppTeam={oppTeam}
+            rawStats={rawStats}
+            results={results}
+          />
+        ) : (
+          <div className="flex flex-col items-center justify-center p-12 border-[4px] border-black bg-white shadow-[12px_12px_0px_0px_rgba(0,0,0,1)]">
+            <div className="w-12 h-12 border-4 border-black border-t-indigo-600 rounded-full animate-spin mb-6"></div>
+            <h2 className="text-2xl font-black uppercase italic tracking-tighter text-black">Synchronizing Data...</h2>
+            <p className="text-[10px] font-black uppercase text-neutral-400 mt-2 tracking-[0.2em]">Calculating Final Ratings</p>
+          </div>
+        )}
+      </main>
     );
   }
 
   if (status === "DRAFTING" && categories) {
     return (
-      <div className="min-h-screen bg-white p-4 font-mono text-black flex flex-col items-center justify-center">
-        <div className="w-full max-w-7xl">
-          <Arena
-            myName={myName}
-            oppName={oppName}
-            team={team}
-            oppTeam={oppTeam}
-            budget={budget}
-            timer={timer}
-            status={status}
-            handlePick={handlePick}
-            categories={categories as any}
-            oppLeft={oppLeft}
-          />
-        </div>
-      </div>
+      <main className="min-h-screen w-full flex flex-col">
+        <Arena
+          myName={myName}
+          oppName={oppName}
+          team={team}
+          oppTeam={oppTeam}
+          budget={budget}
+          timer={timer}
+          status={status}
+          handlePick={handlePick}
+          categories={categories as any}
+          oppLeft={oppLeft}
+        />
+      </main>
     );
   }
 
-  return <ArenaLoading />;
+  return (
+    <div className="min-h-screen w-full flex items-center justify-center">
+      <ArenaLoading />
+    </div>
+  );
 }

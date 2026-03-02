@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, memo, useRef } from "react";
+import { Button } from "../../../components/ui/Button";
 
 interface UserProfileProps {
   myId: string;
@@ -41,16 +42,27 @@ const UserProfile = memo(function UserProfile({
     }
   };
 
+  const handleButtonClick = () => {
+    if (isEditingName) {
+      triggerSave();
+    } else {
+      setIsEditingName(true);
+    }
+  };
+
   return (
     <div 
       ref={containerRef}
-      className="mb-12 border-4 border-black bg-white p-6 flex flex-col items-center gap-4 w-full max-w-sm"
+      className="mb-12 border-4 border-black bg-white p-6 flex flex-col items-center gap-4 w-full max-w-sm relative shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]"
     >
-      <p className="text-[10px] font-black uppercase text-gray-400 tracking-[0.2em]">
+      <div className="absolute top-0 left-0 w-2 h-2 bg-indigo-600" />
+      <div className="absolute bottom-0 right-0 w-2 h-2 bg-black" />
+
+      <p className="text-[10px] font-black uppercase text-neutral-400 tracking-[0.25em] self-start mb-1">
         User Profile
       </p>
       
-      <div className="flex items-center gap-3 w-full border-b-4 border-black pb-2">
+      <div className="flex items-center gap-3 w-full border-b-4 border-black pb-3">
         {isEditingName ? (
           <input 
             value={username} 
@@ -59,25 +71,36 @@ const UserProfile = memo(function UserProfile({
             onBlur={handleBlur}
             autoFocus 
             maxLength={12} 
-            className="text-2xl font-black uppercase outline-none w-full bg-yellow-100 px-1" 
+            className="text-2xl font-black uppercase outline-none w-full bg-neutral-100 px-2 italic tracking-tighter" 
           />
         ) : (
-          <span className="text-2xl font-black uppercase truncate flex-1">
+          <span className="text-2xl font-black uppercase truncate flex-1 italic tracking-tighter">
             {username}
           </span>
         )}
         
-        <button 
-          onClick={() => isEditingName ? triggerSave() : setIsEditingName(true)} 
-          className="text-xs bg-black text-white px-4 py-2 font-black uppercase border-2 border-black transition-none hover:bg-indigo-600 active:bg-emerald-500"
+        <Button 
+          onClick={handleButtonClick} 
+          size="md"
+          className={`italic font-black border-2 !border-black transition-none ${
+            isEditingName 
+              ? "!bg-[#0DA643] !text-white hover:!bg-[#0D8A3A]" 
+              : "!bg-black !text-white hover:!bg-white hover:!text-black"
+          }`}
         >
-          {isEditingName ? "CONFIRM" : "RENAME"}
-        </button>
+          {isEditingName ? "SAVE" : "RENAME"}
+        </Button>
       </div>
       
-      <p className="text-[10px] font-black uppercase text-black self-start">
-        {`ID: ${myId.slice(0, 8)}`}
-      </p>
+      <div className="w-full flex justify-between items-center mt-1">
+        <p className="text-[9px] font-black uppercase text-black tracking-widest">
+          {`UID: ${myId.slice(0, 12)}`}
+        </p>
+        <div className="flex gap-1">
+          <div className="w-3 h-1 bg-black" />
+          <div className="w-1 h-1 bg-black" />
+        </div>
+      </div>
     </div>
   );
 });
