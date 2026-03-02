@@ -71,7 +71,7 @@ const UserProfile = memo(function UserProfile({
             onBlur={handleBlur}
             autoFocus 
             maxLength={12} 
-            className="text-2xl font-black uppercase outline-none w-full bg-neutral-100 px-2 italic tracking-tighter" 
+            className="text-2xl font-black uppercase outline-none w-full bg-neutral-100 px-2 tracking-tighter" 
           />
         ) : (
           <span className="text-2xl font-black uppercase truncate flex-1 italic tracking-tighter">
@@ -94,7 +94,7 @@ const UserProfile = memo(function UserProfile({
       
       <div className="w-full flex justify-between items-center mt-1">
         <p className="text-[9px] font-black uppercase text-black tracking-widest">
-          {`UID: ${myId.slice(0, 12)}`}
+          {`UID: ${myId.slice(0, 8)}`}
         </p>
         <div className="flex gap-1">
           <div className="w-3 h-1 bg-black" />
