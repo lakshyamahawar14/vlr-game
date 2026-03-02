@@ -29,7 +29,7 @@ export default function RoomPage() {
   if (!isMounted) {
     return (
       <div className="min-h-screen w-full flex items-center justify-center">
-        <ArenaLoading />
+        <ArenaLoading isFetching />
       </div>
     );
   }
@@ -42,7 +42,15 @@ export default function RoomPage() {
     );
   }
 
-  if (isLoading || status === "WAITING") {
+  if (isLoading && !status) {
+    return (
+      <div className="min-h-screen w-full flex items-center justify-center">
+        <ArenaLoading isFetching />
+      </div>
+    );
+  }
+
+  if (status === "WAITING" || status === "READY") {
     return (
       <div className="min-h-screen w-full flex items-center justify-center">
         <ArenaLoading hasPool={!!categories} />
@@ -63,11 +71,7 @@ export default function RoomPage() {
             results={results}
           />
         ) : (
-          <div className="flex flex-col items-center justify-center p-12 border-[4px] border-black bg-white shadow-[12px_12px_0px_0px_rgba(0,0,0,1)]">
-            <div className="w-12 h-12 border-4 border-black border-t-indigo-600 rounded-full animate-spin mb-6"></div>
-            <h2 className="text-2xl font-black uppercase italic tracking-tighter text-black">Synchronizing Data...</h2>
-            <p className="text-[10px] font-black uppercase text-neutral-400 mt-2 tracking-[0.2em]">Calculating Final Ratings</p>
-          </div>
+          <ArenaLoading isEnded />
         )}
       </main>
     );
@@ -94,7 +98,7 @@ export default function RoomPage() {
 
   return (
     <div className="min-h-screen w-full flex items-center justify-center">
-      <ArenaLoading />
+      <ArenaLoading isFetching />
     </div>
   );
 }

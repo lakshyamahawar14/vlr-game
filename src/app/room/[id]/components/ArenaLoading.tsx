@@ -5,9 +5,10 @@ import { useEffect, useState } from "react";
 interface ArenaLoadingProps {
   hasPool?: boolean;
   isEnded?: boolean;
+  isFetching?: boolean;
 }
 
-export default function ArenaLoading({ hasPool, isEnded }: ArenaLoadingProps) {
+export default function ArenaLoading({ hasPool, isEnded, isFetching }: ArenaLoadingProps) {
   const [progress, setProgress] = useState(0);
   const [timeLeft, setTimeLeft] = useState(15);
 
@@ -19,16 +20,17 @@ export default function ArenaLoading({ hasPool, isEnded }: ArenaLoadingProps) {
   }, []);
 
   useEffect(() => {
-    if (!hasPool || isEnded) return;
+    if (!hasPool || isEnded || isFetching) return;
     
     const timer = setInterval(() => {
       setTimeLeft((prev) => (prev <= 0 ? 0 : prev - 1));
     }, 1000);
     
     return () => clearInterval(timer);
-  }, [hasPool, isEnded]);
+  }, [hasPool, isEnded, isFetching]);
 
   const getStatusText = () => {
+    if (isFetching) return "Fetching Duel Data...";
     if (isEnded) return "Duel Concluded. Finalizing Stats...";
     if (hasPool) return "Waiting for Opponent to Join...";
     return "Preparing Player Pool...";
@@ -37,7 +39,7 @@ export default function ArenaLoading({ hasPool, isEnded }: ArenaLoadingProps) {
   return (
     <div className="fixed inset-0 z-[1000] bg-[#F2F2F2] flex flex-col items-center justify-center font-sans overflow-hidden">
       <div className="absolute inset-0 z-0 opacity-[0.03] pointer-events-none select-none flex flex-col items-center justify-center">
-        <span className="text-[20vw] font-black uppercase leading-none tracking-tighter">ARENA</span>
+        <span className="text-[20vw] font-black uppercase leading-none tracking-tighter text-black">ARENA</span>
       </div>
 
       <div className="relative z-10 flex flex-col items-center gap-6 w-full px-6">
@@ -59,7 +61,7 @@ export default function ArenaLoading({ hasPool, isEnded }: ArenaLoadingProps) {
               {getStatusText()}
             </p>
             
-            {hasPool && !isEnded && (
+            {hasPool && !isEnded && !isFetching && (
               <div className="bg-red-600/10 px-3 py-1 border border-red-600/20 mt-2">
                 <p className="text-[10px] font-black text-red-600 animate-pulse uppercase tabular-nums">
                   JOIN TIMEOUT: {timeLeft}s
