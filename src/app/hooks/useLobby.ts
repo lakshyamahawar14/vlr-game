@@ -118,6 +118,12 @@ export function useLobby() {
   };
 
   useEffect(() => {
+    const inviteCount = challengeStack.length;
+    const badge = inviteCount > 0 ? `🔴${inviteCount} ` : "";
+    document.title = `${badge}VLR DUEL - Realtime Roster Drafting 1v1 Duel Game`;
+  }, [challengeStack]);
+
+  useEffect(() => {
     setIsMounted(true);
     const uid = localStorage.getItem("vlr_duel_id") || crypto.randomUUID();
     localStorage.setItem("vlr_duel_id", uid);

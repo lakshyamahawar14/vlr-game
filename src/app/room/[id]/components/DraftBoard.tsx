@@ -40,13 +40,11 @@ export default function DraftBoard({
 
         return (
           <div key={cost} className="border-[3px] border-black bg-white flex flex-col shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
-            {/* Header: Decreased padding and text size slightly */}
             <div className="bg-black text-white px-3 py-1 flex justify-between items-center shrink-0">
               <span className="text-[9px] font-black tracking-[0.2em] uppercase">Tier</span>
               <span className="text-xl font-black italic">${costNum}</span>
             </div>
-
-            {/* Content: Decreased internal padding and spacing */}
+            
             <div className="p-1.5 space-y-1.5 flex-1">
               {players.map((p) => {
                 const isPicked = team.some((tp) => tp.name === p);

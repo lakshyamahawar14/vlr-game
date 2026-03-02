@@ -8,7 +8,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const id = (await params).id;
 
   return {
-    title: `[🟢] Room ${id} | VLR DUEL`,
+    title: `🟢 Room ${id} | VLR DUEL`,
     description: `Join the realtime roster draft in room ${id}`,
   };
 }
