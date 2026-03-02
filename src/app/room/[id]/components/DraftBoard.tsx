@@ -31,7 +31,7 @@ export default function DraftBoard({
 
   return (
     <div
-      className={`grid grid-cols-1 md:grid-cols-2 gap-4 transition-all duration-300 ${
+      className={`grid grid-cols-1 md:grid-cols-2 gap-3 transition-all duration-300 ${
         isFull || isWaiting ? "opacity-40 pointer-events-none" : "opacity-100"
       }`}
     >
@@ -39,13 +39,15 @@ export default function DraftBoard({
         const costNum = Number(cost);
 
         return (
-          <div key={cost} className="border-4 border-black bg-white flex flex-col shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-            <div className="bg-black text-white px-3 py-2 flex justify-between items-center shrink-0">
-              <span className="text-[10px] font-black tracking-[0.3em] uppercase">Tier</span>
-              <span className="text-2xl font-black italic">${costNum}</span>
+          <div key={cost} className="border-[3px] border-black bg-white flex flex-col shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
+            {/* Header: Decreased padding and text size slightly */}
+            <div className="bg-black text-white px-3 py-1 flex justify-between items-center shrink-0">
+              <span className="text-[9px] font-black tracking-[0.2em] uppercase">Tier</span>
+              <span className="text-xl font-black italic">${costNum}</span>
             </div>
 
-            <div className="p-2 space-y-2 flex-1">
+            {/* Content: Decreased internal padding and spacing */}
+            <div className="p-1.5 space-y-1.5 flex-1">
               {players.map((p) => {
                 const isPicked = team.some((tp) => tp.name === p);
                 const isOpponentPicked = oppTeam.some((tp) => tp.name === p);
@@ -66,7 +68,7 @@ export default function DraftBoard({
                       if (!isDisabled) onPick(p, costNum);
                     }}
                     className={`
-                      relative w-full text-left px-3 py-3 font-black uppercase transition-all border-2 h-[46px] flex items-center
+                      relative w-full text-left px-2 py-1 font-black uppercase transition-all border-2 h-[34px] flex items-center
                       ${
                         isWaiting
                           ? "bg-neutral-50 border-neutral-200 text-neutral-300 cursor-not-allowed"
@@ -81,17 +83,17 @@ export default function DraftBoard({
                     `}
                   >
                     <div className="flex justify-between items-center w-full relative z-10">
-                      <span className="text-sm tracking-tighter leading-none truncate pr-2">{p}</span>
+                      <span className="text-[13px] tracking-tighter leading-none truncate pr-2">{p}</span>
 
                       <div className="flex items-center shrink-0 h-4">
                         {isWaiting ? (
-                          <span className="text-[8px] opacity-40">LOCKED</span>
+                          <span className="text-[7px] opacity-40">LOCKED</span>
                         ) : isOpponentPicked ? (
-                          <span className="bg-black text-white text-[8px] px-1.5 py-0.5 font-black">TAKEN</span>
+                          <span className="bg-black text-white text-[7px] px-1 py-0.5 font-black">TAKEN</span>
                         ) : isPicked ? (
-                          <span className="bg-black text-white text-[8px] px-1.5 py-0.5 font-black">OWNED</span>
+                          <span className="bg-black text-white text-[7px] px-1 py-0.5 font-black">OWNED</span>
                         ) : !canAfford ? (
-                          <span className="text-[8px] text-red-600">INSUFFICIENT</span>
+                          <span className="text-[7px] text-red-600">LOW $</span>
                         ) : null}
                       </div>
                     </div>
