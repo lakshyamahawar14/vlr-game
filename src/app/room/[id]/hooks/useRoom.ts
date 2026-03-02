@@ -43,7 +43,6 @@ export function useRoom() {
     if (!data || !myId) return;
 
     if (statusRef.current !== data.status) {
-      console.log(`[${new Date().toLocaleTimeString()}] Room Status Changed: ${data.status}`);
       statusRef.current = data.status;
       setStatus(data.status);
     }
@@ -73,6 +72,13 @@ export function useRoom() {
     if (data.status === "ENDED") {
       setTimer(0);
       setIsLoading(false);
+
+      if (p1Count === 0 || p2Count === 0) {
+        supabase.from("room").delete().eq("id", data.id).then(() => {
+          setRoomExists(false);
+        });
+        return;
+      }
 
       if (data.winner_id) {
         const drawId = "00000000-0000-0000-0000-000000000000";
@@ -195,12 +201,20 @@ export function useRoom() {
           if (statusRef.current === "DRAFTING" && leftPresences.some(p => p.user_id !== myId)) {
             if (leaveTimeoutRef.current) clearTimeout(leaveTimeoutRef.current);
             
-            leaveTimeoutRef.current = setTimeout(() => {
+            leaveTimeoutRef.current = setTimeout(async () => {
               setOppLeft(true);
               setTimer(0);
-              supabase.from("room").delete().eq("id", roomId).then(() => {
+              
+              const { data: latest } = await supabase.from("room").select("p1_team, p2_team").eq("id", roomId).maybeSingle();
+              const p1Empty = (latest?.p1_team || []).length === 0;
+              const p2Empty = (latest?.p2_team || []).length === 0;
+
+              if (p1Empty || p2Empty) {
+                await supabase.from("room").delete().eq("id", roomId);
                 setRoomExists(false);
-              });
+              } else {
+                await supabase.from("room").update({ status: "ENDED" }).eq("id", roomId);
+              }
             }, 5000);
           }
         })
