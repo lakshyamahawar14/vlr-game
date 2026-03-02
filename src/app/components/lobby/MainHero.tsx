@@ -4,6 +4,7 @@ import { memo } from "react";
 import UserProfile from "./UserProfile";
 import Link from "next/link";
 import { Button } from "src/components/ui/Button";
+import GlobalChat from "../chat/GlobalChat";
 
 interface MainHeroProps {
   myId: string;
@@ -24,7 +25,6 @@ const MainHero = memo(function MainHero({
 }: MainHeroProps) {
   return (
     <div className="relative flex-1 flex flex-col items-center justify-center p-8 bg-[#F2F2F2] min-h-screen w-full overflow-hidden font-sans">
-      
       <div className="absolute inset-0 z-0 opacity-[0.07] pointer-events-none" 
            style={{ 
              backgroundImage: `
@@ -107,6 +107,8 @@ const MainHero = memo(function MainHero({
           </div>
         </div>
       </div>
+      
+      <GlobalChat username={username} />
     </div>
   );
 });
