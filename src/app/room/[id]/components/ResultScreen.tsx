@@ -89,7 +89,10 @@ export default function ResultScreen({
                 <div key={p.name} className="flex justify-between items-center p-2 border-2 border-black bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-0.5 transition-transform">
                   <span className="text-xs font-black uppercase tracking-tight truncate mr-2">{p.name}</span>
                   <div className="flex items-center gap-3 shrink-0">
-                    <span className="text-[9px] font-black text-neutral-300">${p.cost}</span>
+                    {/* Updated Credit Display: Blue and Bigger */}
+                    <span className="text-[11px] font-black text-indigo-600 tracking-tighter leading-none">
+                      ${p.cost}
+                    </span>
                     <span className={`text-[10px] font-black px-2 py-0.5 border-2 border-black ${getStatBadgeClass("me")}`}>
                       {(rawStats[p.name.toLowerCase()] || 0).toFixed(2)}
                     </span>
@@ -118,7 +121,9 @@ export default function ResultScreen({
                 <div key={p.name} className="flex justify-between items-center p-2 border-2 border-black bg-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:-translate-x-0.5 transition-transform">
                   <span className="text-xs font-black uppercase tracking-tight truncate mr-2">{p.name}</span>
                   <div className="flex items-center gap-3 shrink-0">
-                    <span className="text-[9px] font-black text-neutral-300">${p.cost}</span>
+                    <span className="text-[11px] font-black text-indigo-600 tracking-tighter leading-none">
+                      ${p.cost}
+                    </span>
                     <span className={`text-[10px] font-black px-2 py-0.5 border-2 border-black ${getStatBadgeClass("opp")}`}>
                       {(rawStats[p.name.toLowerCase()] || 0).toFixed(2)}
                     </span>

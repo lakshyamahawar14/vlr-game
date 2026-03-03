@@ -37,7 +37,7 @@ function LeaderboardContent() {
             LEADER<span className="text-indigo-600">BOARD</span>
           </h1>
           <Link href="/">
-            <Button className="!bg-black !text-white border-2 !border-black hover:!bg-white hover:!text-black transition-all font-black uppercase tracking-tighter">
+            <Button className="!bg-indigo-600 hover:!bg-indigo-500 !text-white border-2 !border-black italic font-black uppercase tracking-tighter shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-x-0.5 active:translate-y-0.5 px-6 py-2 text-sm transition-colors">
               Back to Lobby
             </Button>
           </Link>
@@ -53,7 +53,7 @@ function LeaderboardContent() {
 
           <div className="flex items-center gap-4 w-full md:w-auto justify-center">
             <Button 
-              className="!bg-black !text-white border-2 !border-black disabled:opacity-30 font-black"
+              className="!bg-black !text-white border-2 !border-black disabled:opacity-30 font-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-x-0.5 active:translate-y-0.5"
               size="sm"
               onClick={() => handlePageChange(page - 1)}
               disabled={page <= 1 || loading}
@@ -66,7 +66,7 @@ function LeaderboardContent() {
             </div>
 
             <Button 
-              className="!bg-black !text-white border-2 !border-black disabled:opacity-30 font-black"
+              className="!bg-black !text-white border-2 !border-black disabled:opacity-30 font-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-x-0.5 active:translate-y-0.5"
               size="sm"
               onClick={() => handlePageChange(page + 1)}
               disabled={!hasMore || loading}

@@ -37,6 +37,8 @@ export default function RoomPage() {
 
   return (
     <Arena
+      roomId={roomProps.params?.id as string}
+      userId={roomProps.myId as string}
       oppName={roomProps.oppName}
       team={gameProps.team}
       oppTeam={gameProps.oppTeam}

@@ -34,7 +34,7 @@ export default function DraftBoard({
 
   return (
     <div
-      className={`grid grid-cols-1 md:grid-cols-2 gap-3 transition-all duration-300 ${
+      className={`grid grid-cols-1 md:grid-cols-2 gap-3 transition-opacity duration-300 ${
         isFull || isWaiting ? "opacity-40 pointer-events-none" : "opacity-100"
       }`}
     >
@@ -42,7 +42,7 @@ export default function DraftBoard({
         const costNum = Number(cost);
 
         return (
-          <div key={`tier-${cost}`} className="border-[3px] border-black bg-white flex flex-col shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
+          <div key={`tier-${cost}`} className="border-[3px] border-black bg-white flex flex-col">
             <div className="bg-black text-white px-3 py-1 flex justify-between items-center shrink-0">
               <span className="text-[9px] font-black tracking-[0.2em] uppercase">Tier</span>
               <span className="text-xl font-black italic">${costNum}</span>
@@ -62,16 +62,16 @@ export default function DraftBoard({
                   isFull;
 
                 let variant: 'primary' | 'secondary' | 'indigo' = 'secondary';
-                let customClasses = "h-[34px] !justify-between !px-2 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]";
+                let customClasses = "h-[34px] !justify-between !px-2 !shadow-none border-[2px] border-black transition-colors";
 
                 if (isPicked) {
                   customClasses += " !bg-[#A3E635] !text-black !opacity-100";
                 } else if (isOpponentPicked) {
                   customClasses += " !bg-red-600 !text-white !opacity-100";
                 } else if (!canAfford || isWaiting) {
-                  customClasses += " !bg-neutral-50 !text-neutral-300 border-dashed !shadow-none";
+                  customClasses += " !bg-neutral-50 !text-neutral-300 border-dashed border-neutral-200";
                 } else { 
-                  customClasses += " hover:!bg-indigo-600 hover:!text-white hover:-translate-y-0.5 active:translate-y-0";
+                  customClasses += " hover:!bg-indigo-600 hover:!text-white";
                 }
 
                 return (

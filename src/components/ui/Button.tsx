@@ -1,8 +1,8 @@
 import React from 'react';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'indigo';
-  size?: 'sm' | 'md' | 'lg' | 'xl'; // Added xl
+  variant?: 'primary' | 'secondary' | 'indigo' | 'green' | 'yellow';
+  size?: 'sm' | 'md' | 'lg' | 'xl';
   fullWidth?: boolean;
 }
 
@@ -14,13 +14,15 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       primary: "bg-black text-white hover:bg-neutral-800 active:bg-white active:text-black",
       secondary: "bg-white text-black hover:bg-neutral-100 active:bg-black active:text-white",
       indigo: "bg-indigo-600 text-white hover:bg-indigo-500 active:bg-indigo-700",
+      green: "bg-[#A3E635] text-black hover:bg-[#bef264] active:bg-white",
+      yellow: "bg-yellow-400 text-black hover:bg-yellow-300 active:bg-white",
     };
 
     const sizes = {
       sm: "text-[10px] px-3 py-1 border-2",
       md: "text-xs px-4 py-2 border-2",
       lg: "text-base px-6 py-3 border-[3px]",
-      xl: "text-4xl py-8 px-10 border-4", // Handled the FIND MATCH scale here
+      xl: "text-4xl py-8 px-10 border-4",
     };
 
     const widthStyle = fullWidth ? "w-full" : "w-fit";

@@ -10,7 +10,25 @@ export default function GlobalChat() {
   const [newMessage, setNewMessage] = useState("");
   const { name: username } = getStoredUser();
   const { messages, sendMessage, myId, unreadCount } = useChat(username, isOpen);
+  
   const scrollRef = useRef<HTMLDivElement>(null);
+  const chatRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (chatRef.current && !chatRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isOpen]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -35,7 +53,7 @@ export default function GlobalChat() {
   };
 
   return (
-    <div className="absolute bottom-4 right-4 md:bottom-8 md:right-8 z-[1000] font-sans text-black">
+    <div ref={chatRef} className="absolute bottom-4 right-4 md:bottom-8 md:right-8 z-[1000] font-sans text-black">
       {isOpen && (
         <div className="fixed inset-0 bg-white z-[2000] flex flex-col sm:absolute sm:inset-auto sm:bottom-20 sm:right-0 sm:w-[380px] sm:h-[500px] sm:border-4 sm:border-black sm:shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
           <div className="bg-black text-white p-5 sm:p-4 flex justify-between items-center shrink-0">
@@ -43,8 +61,8 @@ export default function GlobalChat() {
               <div className="w-3 h-3 bg-[#0DA643] rounded-full animate-pulse" />
               <span className="font-black uppercase tracking-tighter italic text-lg sm:text-sm">Lobby Chat</span>
             </div>
-            <button onClick={() => setIsOpen(false)} className="cursor-pointer outline-none border-none bg-transparent p-1 flex items-center justify-center">
-              <X size={28} strokeWidth={3} className="sm:w-6 sm:h-6 text-white" />
+            <button onClick={() => setIsOpen(false)} className="cursor-pointer outline-none border-none bg-transparent p-1 flex items-center justify-center text-white hover:text-red-500 transition-colors">
+              <X size={28} strokeWidth={3} className="sm:w-6 sm:h-6" />
             </button>
           </div>
 
@@ -86,8 +104,26 @@ export default function GlobalChat() {
               type="text"
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
-              placeholder="Type message..."
-              className="flex-1 border-2 border-black p-3 sm:p-2 font-bold focus:outline-none focus:bg-neutral-50 text-black placeholder:text-neutral-400 text-base sm:text-sm min-w-0"
+              placeholder="TYPE MESSAGE..."
+              className="
+                flex-1 
+                bg-[#F2F2F2] 
+                border-[3px] 
+                border-black 
+                p-3 
+                sm:p-2 
+                font-black
+                tracking-tight 
+                text-sm 
+                placeholder:text-neutral-400 
+                placeholder:italic 
+                focus:outline-none 
+                focus:bg-white 
+                focus:ring-2 
+                focus:ring-indigo-600 
+                transition-all 
+                shadow-[inset_2px_2px_0px_0px_rgba(0,0,0,0.1)]
+              "
             />
             <button type="submit" className="bg-[#A3E635] border-2 border-black px-4 sm:p-2 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] active:translate-y-0.5 active:shadow-none transition-all cursor-pointer outline-none flex items-center justify-center">
               <Send size={22} strokeWidth={3} className="text-black sm:w-5 sm:h-5" />
@@ -109,7 +145,7 @@ export default function GlobalChat() {
             {unreadCount > 9 ? "9+" : unreadCount}
           </div>
         )}
-        < MessageSquare size={28} strokeWidth={3} />
+        <MessageSquare size={28} strokeWidth={3} />
       </button>
     </div>
   );

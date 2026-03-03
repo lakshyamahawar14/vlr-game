@@ -35,8 +35,7 @@ const MainHero = memo(function MainHero({
       <div className="absolute top-4 right-4 md:top-8 md:right-8 z-50">
         <Link href="/leaderboard">
           <Button 
-            className="!bg-black !text-white border-2 !border-black hover:!bg-white hover:!text-black transition-all font-black uppercase tracking-tighter"
-            size="md"
+            className="!bg-indigo-600 hover:!bg-indigo-500 !text-white border-2 !border-black italic font-black uppercase tracking-tighter shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-x-0.5 active:translate-y-0.5 px-6 py-2 text-sm transition-colors"
           >
             Leaderboard
           </Button>

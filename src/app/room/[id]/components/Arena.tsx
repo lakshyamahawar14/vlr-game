@@ -7,6 +7,8 @@ import DraftBoard from "./DraftBoard";
 import { Player } from "../hooks/useRoom";
 
 interface Props {
+  roomId: string;
+  userId: string;
   oppName: string;
   team: Player[];
   oppTeam: Player[];
@@ -21,6 +23,8 @@ interface Props {
 }
 
 export default function Arena({
+  roomId,
+  userId,
   oppName,
   team,
   oppTeam,
@@ -76,6 +80,8 @@ export default function Arena({
                 value={myValue}
                 team={team}
                 variant="player"
+                roomId={roomId}
+                userId={userId}
               />
             </div>
 
@@ -96,6 +102,8 @@ export default function Arena({
                 value={oppValue}
                 team={oppTeam}
                 variant="opponent"
+                roomId={roomId}
+                userId={userId}
               />
             </div>
           </div>
