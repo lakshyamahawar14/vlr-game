@@ -32,8 +32,9 @@ export function useRoom() {
   const [rawStats, setRawStats] = useState<Record<string, number>>({});
   const [oppLeft, setOppLeft] = useState(false);
   const [results, setResults] = useState<GameResult | null>(null);
-  
+
   const statusRef = useRef<string | null>(null);
+  const roomCreatedAtRef = useRef<string | null>(null);
   const isProcessingPick = useRef(false);
   const pickQueue = useRef<{ name: string; cost: number }[]>([]);
   const initialFetchDone = useRef(false);
@@ -42,17 +43,22 @@ export function useRoom() {
   const syncStates = useCallback((data: any) => {
     if (!data || !myId) return;
 
+    if (data.created_at) {
+      roomCreatedAtRef.current = data.created_at;
+    }
+
     if (statusRef.current !== data.status) {
+      console.log("[STATUS CHANGE]:", data.status);
       statusRef.current = data.status;
       setStatus(data.status);
     }
-    
+
     const isP1 = data.p1_id === myId;
     setRole(isP1 ? "p1" : "p2");
-    
+
     const inMyTeam = isP1 ? data.p1_team || [] : data.p2_team || [];
     const inOppTeam = isP1 ? data.p2_team || [] : data.p1_team || [];
-    
+
     setTeam(inMyTeam);
     setOppTeam(inOppTeam);
     setBudget(isP1 ? data.p1_budget : data.p2_budget);
@@ -74,6 +80,7 @@ export function useRoom() {
       setIsLoading(false);
 
       if (p1Count === 0 || p2Count === 0) {
+        console.log("[CLEANUP]: Empty team detected in ENDED state. Deleting room.");
         supabase.from("room").delete().eq("id", data.id).then(() => {
           setRoomExists(false);
         });
@@ -84,7 +91,7 @@ export function useRoom() {
         const drawId = "00000000-0000-0000-0000-000000000000";
         const myScore = isP1 ? Number(data.p1_score || 0) : Number(data.p2_score || 0);
         const oppScore = isP1 ? Number(data.p2_score || 0) : Number(data.p1_score || 0);
-        
+
         let wName = "DRAW";
         if (data.winner_id === myId) {
           wName = isP1 ? data.p1_name : data.p2_name;
@@ -108,9 +115,13 @@ export function useRoom() {
       const elapsed = Math.floor((Date.now() - start) / 1000);
       setTimer(Math.max(0, 30 - elapsed));
       setIsLoading(false);
+    } else if (data.status === "READY" || data.status === "WAITING") {
+      const start = new Date(data.created_at).getTime();
+      const elapsed = Math.floor((Date.now() - start) / 1000);
+      setTimer(Math.max(0, 15 - elapsed));
+      setIsLoading(true);
     } else {
       setTimer(30);
-      if (data.status === "READY" || data.status === "WAITING") setIsLoading(true);
     }
 
     if (isP1) {
@@ -139,12 +150,15 @@ export function useRoom() {
 
     const setupRoom = async () => {
       const { data: room, error: fetchError } = await supabase.from("room").select("*").eq("id", roomId).maybeSingle();
-      
-      if (fetchError || !room) { 
-        setRoomExists(false); 
-        setIsLoading(false); 
-        return; 
+
+      if (fetchError || !room) {
+        console.error("[FETCH ERROR]: Room not found.");
+        setRoomExists(false);
+        setIsLoading(false);
+        return;
       }
+
+      roomCreatedAtRef.current = room.created_at;
 
       if (room.status === "ENDED") {
         syncStates(room);
@@ -163,12 +177,14 @@ export function useRoom() {
         try {
           const res = await fetch("/api/players");
           const vlr = await res.json();
-          await supabase.from("room").update({ 
-            categories: vlr.pool, 
+          await supabase.from("room").update({
+            categories: vlr.pool,
             raw_stats: vlr.rawStats,
             p1_joined: true
           }).eq("id", roomId);
-        } catch (e) {}
+        } catch (e) {
+          console.error("[API ERROR]: Failed to fetch player pool.");
+        }
       }
 
       const { data: fresh } = await supabase.from("room").select("*").eq("id", roomId).maybeSingle();
@@ -176,50 +192,59 @@ export function useRoom() {
 
       const channel = supabase.channel(`room_${roomId}`, { config: { presence: { key: myId } } })
         .on("postgres_changes", { event: "UPDATE", schema: "public", table: "room", filter: `id=eq.${roomId}` }, (p) => {
-            syncStates(p.new);
+          syncStates(p.new);
         })
         .on("postgres_changes", { event: "DELETE", schema: "public", table: "room", filter: `id=eq.${roomId}` }, () => {
-            setRoomExists(false);
+          console.log("[REALTIME]: Room was deleted.");
+          setRoomExists(false);
         })
         .on("presence", { event: "sync" }, async () => {
           const state = channel.presenceState();
           const userCount = Object.keys(state).length;
 
           if (userCount === 2 && leaveTimeoutRef.current) {
+            console.log("[PRESENCE]: Opponent returned. Clearing leave timeout.");
             clearTimeout(leaveTimeoutRef.current);
             leaveTimeoutRef.current = null;
           }
 
           if (userCount === 2 && statusRef.current === "READY") {
-            await supabase.from("room").update({ 
-              status: "DRAFTING", 
-              draft_start_at: new Date().toISOString() 
+            console.log("[PRESENCE]: Both players ready. Starting draft.");
+            await supabase.from("room").update({
+              status: "DRAFTING",
+              draft_start_at: new Date().toISOString()
             }).eq("id", roomId);
           }
         })
         .on("presence", { event: "leave" }, ({ leftPresences }) => {
           if (statusRef.current === "DRAFTING" && leftPresences.some(p => p.user_id !== myId)) {
+            console.warn("[PRESENCE]: Opponent left during draft. Starting 5s grace period.");
             if (leaveTimeoutRef.current) clearTimeout(leaveTimeoutRef.current);
-            
+
             leaveTimeoutRef.current = setTimeout(async () => {
               setOppLeft(true);
               setTimer(0);
-              
+
               const { data: latest } = await supabase.from("room").select("p1_team, p2_team").eq("id", roomId).maybeSingle();
               const p1Empty = (latest?.p1_team || []).length === 0;
               const p2Empty = (latest?.p2_team || []).length === 0;
 
               if (p1Empty || p2Empty) {
+                console.log("[ABORT]: Match incomplete. Deleting room.");
                 await supabase.from("room").delete().eq("id", roomId);
                 setRoomExists(false);
               } else {
+                console.log("[ABORT]: Match partially complete. Ending early.");
                 await supabase.from("room").update({ status: "ENDED" }).eq("id", roomId);
               }
             }, 5000);
           }
         })
         .subscribe(async (s) => {
-          if (s === "SUBSCRIBED") await channel.track({ user_id: myId, online_at: new Date().toISOString() });
+          if (s === "SUBSCRIBED") {
+            console.log("[CHANNEL]: Subscribed to presence.");
+            await channel.track({ user_id: myId, online_at: new Date().toISOString() });
+          }
         });
     };
 
@@ -228,11 +253,31 @@ export function useRoom() {
 
   useEffect(() => {
     const interval = setInterval(() => {
-      if (statusRef.current === "DRAFTING") {
+      const currentStatus = statusRef.current;
+
+      if (currentStatus === "WAITING" || currentStatus === "READY") {
+        if (roomCreatedAtRef.current) {
+          const start = new Date(roomCreatedAtRef.current).getTime();
+          const age = Math.floor((Date.now() - start) / 1000);
+          setTimer(Math.max(0, 15 - age));
+
+          if (age >= 15 && roomExists) {
+            console.warn("[TIMEOUT]: Lobby join time expired. Nuking room.");
+            setRoomExists(false);
+            supabase.from("room")
+              .update({ status: "ENDED" })
+              .eq("id", params.id)
+              .then(() => {
+                supabase.from("room").delete().eq("id", params.id).then();
+              });
+          }
+        }
+      } else if (currentStatus === "DRAFTING") {
         setTimer((prev) => {
           if (prev <= 0) {
             if (role === "p1" && statusRef.current !== "ENDED") {
-                supabase.from("room").update({ status: "ENDED" }).eq("id", params.id).then();
+              console.log("[TIMEOUT]: Draft timer expired. Ending match.");
+              supabase.from("room").update({ status: "ENDED" }).eq("id", params.id).then();
             }
             return 0;
           }
@@ -241,24 +286,25 @@ export function useRoom() {
       }
     }, 1000);
     return () => clearInterval(interval);
-  }, [role, params.id]);
+  }, [role, params.id, roomExists]);
 
   const processQueue = async () => {
     if (isProcessingPick.current || pickQueue.current.length === 0) return;
     isProcessingPick.current = true;
     const currentPick = pickQueue.current[0];
-    
+
     try {
-      const { error } = await supabase.rpc('pick_player', { 
-        room_id_input: params.id, 
-        player_name: currentPick.name, 
-        player_cost: currentPick.cost, 
-        player_role: role 
+      const { error } = await supabase.rpc('pick_player', {
+        room_id_input: params.id,
+        player_name: currentPick.name,
+        player_cost: currentPick.cost,
+        player_role: role
       });
 
       if (error) throw error;
       pickQueue.current.shift();
     } catch (e) {
+      console.error("[RPC ERROR]: Pick failed.", e);
       pickQueue.current.shift();
     } finally {
       isProcessingPick.current = false;
@@ -269,11 +315,11 @@ export function useRoom() {
   const handlePick = async (name: string, cost: number) => {
     if (!params?.id || !role || statusRef.current !== "DRAFTING" || team.length >= 5 || budget < cost) return;
     if (team.some(p => p.name === name) || oppTeam.some(p => p.name === name)) return;
-    
+
     setTeam(prev => [...prev, { name, cost }]);
     setBudget(prev => prev - cost);
     pickQueue.current.push({ name, cost });
-    
+
     if (!isProcessingPick.current) {
       processQueue();
     }

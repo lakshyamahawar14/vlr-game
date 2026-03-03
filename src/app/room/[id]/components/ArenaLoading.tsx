@@ -6,11 +6,11 @@ interface ArenaLoadingProps {
   hasPool?: boolean;
   isEnded?: boolean;
   isFetching?: boolean;
+  externalTimer?: number;
 }
 
-export default function ArenaLoading({ hasPool, isEnded, isFetching }: ArenaLoadingProps) {
+export default function ArenaLoading({ hasPool, isEnded, isFetching, externalTimer }: ArenaLoadingProps) {
   const [progress, setProgress] = useState(0);
-  const [timeLeft, setTimeLeft] = useState(15);
 
   useEffect(() => {
     const progressInterval = setInterval(() => {
@@ -18,16 +18,6 @@ export default function ArenaLoading({ hasPool, isEnded, isFetching }: ArenaLoad
     }, 50);
     return () => clearInterval(progressInterval);
   }, []);
-
-  useEffect(() => {
-    if (!hasPool || isEnded || isFetching) return;
-    
-    const timer = setInterval(() => {
-      setTimeLeft((prev) => (prev <= 0 ? 0 : prev - 1));
-    }, 1000);
-    
-    return () => clearInterval(timer);
-  }, [hasPool, isEnded, isFetching]);
 
   const getStatusText = () => {
     if (isFetching) return "Fetching Duel Data...";
@@ -61,10 +51,10 @@ export default function ArenaLoading({ hasPool, isEnded, isFetching }: ArenaLoad
               {getStatusText()}
             </p>
             
-            {hasPool && !isEnded && !isFetching && (
+            {hasPool && !isEnded && !isFetching && externalTimer !== undefined && (
               <div className="bg-red-600/10 px-3 py-1 border border-red-600/20 mt-2">
                 <p className="text-[10px] font-black text-red-600 animate-pulse uppercase tabular-nums">
-                  JOIN TIMEOUT: {timeLeft}s
+                  JOIN TIMEOUT: {externalTimer}s
                 </p>
               </div>
             )}

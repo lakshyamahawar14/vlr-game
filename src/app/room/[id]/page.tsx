@@ -8,31 +8,12 @@ import ArenaLoading from "./components/ArenaLoading";
 
 export default function RoomPage() {
   const {
-    params,
-    myName,
-    oppName,
-    isMounted,
-    isLoading,
-    roomExists,
-    team,
-    oppTeam,
-    budget,
-    timer,
-    status,
-    handlePick,
-    categories,
-    rawStats,
-    oppLeft,
-    results
+    params, myName, oppName, isMounted, isLoading, roomExists,
+    team, oppTeam, budget, timer, status, handlePick,
+    categories, rawStats, oppLeft, results
   } = useRoom();
 
-  if (!isMounted) {
-    return (
-      <div className="min-h-screen w-full flex items-center justify-center">
-        <ArenaLoading isFetching />
-      </div>
-    );
-  }
+  if (!isMounted) return <ArenaLoading isFetching />;
 
   if (!roomExists) {
     return (
@@ -42,18 +23,12 @@ export default function RoomPage() {
     );
   }
 
-  if (isLoading && !status) {
-    return (
-      <div className="min-h-screen w-full flex items-center justify-center">
-        <ArenaLoading isFetching />
-      </div>
-    );
-  }
+  if (isLoading && !status) return <ArenaLoading isFetching />;
 
   if (status === "WAITING" || status === "READY") {
     return (
       <div className="min-h-screen w-full flex items-center justify-center">
-        <ArenaLoading hasPool={!!categories} />
+        <ArenaLoading hasPool={!!categories} externalTimer={timer} />
       </div>
     );
   }
@@ -63,12 +38,9 @@ export default function RoomPage() {
       <main className="min-h-screen w-full flex items-center justify-center">
         {results ? (
           <ResultScreen
-            myName={myName}
-            oppName={oppName}
-            myTeam={team}
-            oppTeam={oppTeam}
-            rawStats={rawStats}
-            results={results}
+            myName={myName} oppName={oppName}
+            myTeam={team} oppTeam={oppTeam}
+            rawStats={rawStats} results={results}
           />
         ) : (
           <ArenaLoading isEnded />
@@ -81,24 +53,15 @@ export default function RoomPage() {
     return (
       <main className="min-h-screen w-full flex flex-col">
         <Arena
-          myName={myName}
-          oppName={oppName}
-          team={team}
-          oppTeam={oppTeam}
-          budget={budget}
-          timer={timer}
-          status={status}
-          handlePick={handlePick}
-          categories={categories as any}
-          oppLeft={oppLeft}
+          myName={myName} oppName={oppName}
+          team={team} oppTeam={oppTeam}
+          budget={budget} timer={timer}
+          status={status} handlePick={handlePick}
+          categories={categories as any} oppLeft={oppLeft}
         />
       </main>
     );
   }
 
-  return (
-    <div className="min-h-screen w-full flex items-center justify-center">
-      <ArenaLoading isFetching />
-    </div>
-  );
+  return <ArenaLoading isFetching />;
 }
