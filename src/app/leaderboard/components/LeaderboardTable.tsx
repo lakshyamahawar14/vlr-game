@@ -1,4 +1,6 @@
-import React from "react";
+"use client";
+
+import { getStoredUser } from "@/lib/auth";
 
 interface LeaderboardEntry {
   rank: number;
@@ -14,11 +16,12 @@ interface LeaderboardEntry {
 
 interface Props {
   data: LeaderboardEntry[];
-  localUserId: string | null;
   loading: boolean;
 }
 
-export function LeaderboardTable({ data, localUserId, loading }: Props) {
+export function LeaderboardTable({ data, loading }: Props) {
+  const { id: localUserId } = getStoredUser();
+
   return (
     <div className="bg-white border-4 border-black shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] relative min-h-[500px]">
       <div className="overflow-x-auto max-h-[65vh] overflow-y-auto">

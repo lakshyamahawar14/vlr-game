@@ -1,5 +1,7 @@
 "use client";
 
+import { getStoredUser } from "@/lib/auth";
+
 type Player = { name: string; cost: number };
 
 interface Props {
@@ -11,6 +13,8 @@ interface Props {
 
 export default function TeamDisplay({ name, value, team, variant }: Props) {
   const isPlayer = variant === "player";
+  const { name: myStoredName } = getStoredUser();
+  const displayName = isPlayer ? myStoredName : name;
 
   return (
     <div className={`border-4 border-black flex flex-col bg-white shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]`}>
@@ -19,7 +23,7 @@ export default function TeamDisplay({ name, value, team, variant }: Props) {
           {isPlayer ? "Your Roster" : "Enemy Roster"}
         </p>
         <h2 className="text-2xl font-black uppercase italic tracking-tighter truncate leading-none mb-3">
-          {name}
+          {displayName}
         </h2>
         <div className={`inline-flex items-center gap-2 px-3 py-1 border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] ${isPlayer ? 'bg-indigo-600' : 'bg-red-600'} text-white`}>
           <span className="text-[10px] font-black uppercase">Spent:</span>

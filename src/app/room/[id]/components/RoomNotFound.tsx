@@ -27,11 +27,11 @@ export default function RoomNotFound({ roomId }: Props) {
         }} 
       />
 
-      <div className="w-full max-w-xl border-4 border-black p-8 md:p-12 text-center bg-white shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] relative z-10">
+      <div className="w-full max-w-xl border-4 border-black p-6 md:p-12 text-center bg-white shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] relative z-10">
         <div className="absolute top-0 left-0 w-full h-2 bg-red-600" />
         
         <div className="mb-8">
-          <h2 className="text-5xl md:text-6xl font-black uppercase italic tracking-tighter leading-none text-black">
+          <h2 className="text-4xl md:text-6xl font-black uppercase italic tracking-tighter leading-none text-black">
             ROOM <span className="text-red-600">EXPIRED</span>
           </h2>
         </div>
@@ -41,38 +41,30 @@ export default function RoomNotFound({ roomId }: Props) {
             Inactivity timeout, invalid session ID, or the duel has been decommissioned.
           </p>
           
-          <div className="bg-[#F2F2F2] p-6 border-2 border-black relative group">
+          <div className="bg-[#F2F2F2] py-3 px-4 border-2 border-black relative group">
             <div className="absolute -top-3 left-4 bg-black text-white px-2 py-0.5 text-[9px] font-black uppercase tracking-tighter">
               Room ID
             </div>
-            <p className="text-sm md:text-base font-mono font-black break-all uppercase text-black">
+            <p className="text-[10px] md:text-sm font-mono font-black break-all uppercase text-black">
               {roomId}
             </p>
           </div>
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+        <div className="flex flex-row gap-3 md:gap-4 justify-center items-center">
           <Button
             onClick={() => router.push("/")}
-            className="!bg-black !text-white border-2 !border-black hover:!bg-white hover:!text-black transition-all font-black uppercase tracking-tighter px-8 py-4 shadow-[4px_4px_0px_0px_rgba(79,70,229,1)]"
+            className="bg-black text-white border-2 border-black hover:opacity-90 transition-all font-black uppercase tracking-tighter px-3 py-2 md:px-8 md:py-4 text-[10px] md:text-base shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none flex-1 md:flex-none"
           >
             Back to Lobby
           </Button>
 
           <Button
             onClick={handleReload}
-            className="!bg-white !text-black border-2 !border-black hover:!bg-neutral-100 transition-all font-black uppercase tracking-tighter px-8 py-4"
+            className="bg-black text-white border-2 border-black hover:opacity-90 transition-all font-black uppercase tracking-tighter px-3 py-2 md:px-8 md:py-4 text-[10px] md:text-base shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none flex-1 md:flex-none"
           >
             Reload Room
           </Button>
-        </div>
-
-        <div className="absolute bottom-4 right-4 opacity-10">
-          <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M0 0H40V40H0V0ZM2 2V38H38V2H2Z" fill="black"/>
-            <rect x="18" y="10" width="4" height="12" fill="black"/>
-            <rect x="18" y="26" width="4" height="4" fill="black"/>
-          </svg>
         </div>
       </div>
     </div>

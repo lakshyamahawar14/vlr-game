@@ -1,8 +1,11 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
+import { getStoredUser } from "@/lib/auth";
+import { useQueue } from "./useQueue";
+import { useMatchmaking } from "./useMatchmaking";
 
 export type PresenceUser = {
   id: string;
@@ -17,127 +20,39 @@ export function useLobby() {
   const [myId, setMyId] = useState<string>("");
   const [username, setUsername] = useState<string>("");
   const [isMounted, setIsMounted] = useState(false);
-  const [isQueuing, setIsQueuing] = useState(false);
-  const [onlineUsers, setOnlineUsers] = useState<PresenceUser[]>([]);
-  const [challengeStack, setChallengeStack] = useState<{ id: string; name: string }[]>([]);
-  const [isWaitingForResponse, setIsWaitingForResponse] = useState<string | null>(null);
 
-  const presenceChannelRef = useRef<any>(null);
-  const matchmakingLockRef = useRef<boolean>(false);
-  const actionQueueRef = useRef<Promise<void>>(Promise.resolve());
-
-  const currentStatusRef = useRef({
-    name: "",
-    isQueuing: false,
-    challenging: null as string | null,
-    joinedAt: 0
+  const queue = useQueue(myId, username);
+  const matchmaking = useMatchmaking({
+    myId,
+    username,
+    isQueuing: queue.isQueuing,
+    onlineUsers: queue.onlineUsers,
+    challengeStack: queue.challengeStack,
+    presenceChannelRef: queue.presenceChannelRef,
+    enqueue: queue.enqueue,
+    setChallengeStack: queue.setChallengeStack,
   });
 
-  const enqueue = (fn: () => Promise<void>) => {
-    actionQueueRef.current = actionQueueRef.current.then(fn).catch(() => {});
-  };
-
-  const trackPresence = async () => {
-    if (!presenceChannelRef.current) return;
-    const latestName = localStorage.getItem("vlr_duel_username") || currentStatusRef.current.name;
-    if (latestName === "YOU") return;
-
-    await presenceChannelRef.current.track({
-      name: latestName,
-      challenging: currentStatusRef.current.challenging,
-      isQueuing: currentStatusRef.current.isQueuing,
-      joinedAt: currentStatusRef.current.joinedAt
-    });
-  };
-
-  const sendDuelRequest = (targetId: string) => {
-    setIsWaitingForResponse(targetId);
-    currentStatusRef.current.challenging = targetId;
-    enqueue(() => trackPresence());
-  };
-
-  const cancelDuelRequest = () => {
-    setIsWaitingForResponse(null);
-    currentStatusRef.current.challenging = null;
-    enqueue(() => trackPresence());
-  };
-
-  const acceptDuel = () => {
-    if (challengeStack.length === 0) return;
-    const challenger = challengeStack[0];
-    setChallengeStack([]);
-    const roomId = `match_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
-
-    enqueue(async () => {
-      const actualName = localStorage.getItem("vlr_duel_username") || username;
-      const { error } = await supabase.from("room").insert([{
-        id: roomId,
-        p1_id: challenger.id,
-        p2_id: myId,
-        status: "WAITING",
-        p1_joined: false,
-        p2_joined: false,
-        p1_name: challenger.name,
-        p2_name: actualName,
-        p1_budget: 100,
-        p2_budget: 100
-      }]);
-
-      if (!error && presenceChannelRef.current) {
-        await presenceChannelRef.current.send({
-          type: "broadcast",
-          event: "duel_started",
-          payload: { roomId, challengerId: challenger.id, targetId: myId },
-        });
-      }
-    });
-  };
-
-  const declineDuel = () => {
-    if (challengeStack.length === 0) return;
-    const challengerId = challengeStack[0].id;
-    setChallengeStack([]);
-    enqueue(async () => {
-      if (presenceChannelRef.current) {
-        await presenceChannelRef.current.send({
-          type: "broadcast",
-          event: "duel_declined",
-          payload: { challengerId },
-        });
-      }
-    });
-  };
-
-  const toggleQueue = () => {
-    const next = !isQueuing;
-    setIsQueuing(next);
-    currentStatusRef.current.isQueuing = next;
-    currentStatusRef.current.joinedAt = next ? Date.now() : 0;
-    matchmakingLockRef.current = false;
-    enqueue(() => trackPresence());
-  };
-
   useEffect(() => {
-    const inviteCount = challengeStack.length;
-    const badge = inviteCount > 0 ? `🔴${inviteCount} ` : "";
+    const inviteCount = queue.challengeStack.length;
+    const badge = inviteCount > 0 ? `(${inviteCount}) ` : "";
     document.title = `${badge}VLR DUEL - Realtime Roster Drafting 1v1 Duel Game`;
-  }, [challengeStack]);
+  }, [queue.challengeStack.length]); // Only run when count changes
 
   useEffect(() => {
     setIsMounted(true);
-    const uid = localStorage.getItem("vlr_duel_id") || crypto.randomUUID();
-    localStorage.setItem("vlr_duel_id", uid);
-    setMyId(uid);
+    const { id, name } = getStoredUser();
+    setMyId(id);
+    setUsername(name);
+    queue.currentStatusRef.current.name = name;
 
-    const storedName = localStorage.getItem("vlr_duel_username") || `Player_${uid.slice(0, 4)}`;
-    setUsername(storedName);
-    currentStatusRef.current.name = storedName;
+    console.log("Initializing Lobby Channel for:", name);
 
     const channel = supabase.channel("global_lobby", {
-      config: { presence: { key: uid }, broadcast: { self: true } },
+      config: { presence: { key: id }, broadcast: { self: true } },
     });
 
-    presenceChannelRef.current = channel;
+    queue.presenceChannelRef.current = channel;
 
     const syncState = () => {
       const state = channel.presenceState();
@@ -152,16 +67,18 @@ export function useLobby() {
         };
       });
 
-      setOnlineUsers(users);
-      const me = users.find((u) => u.id === uid);
+      console.log("Online Users Updated:", users.length);
+      queue.setOnlineUsers(users);
+      
+      const me = users.find((u) => u.id === id);
       if (me) {
-        setIsQueuing(!!me.isQueuing);
-        currentStatusRef.current.isQueuing = !!me.isQueuing;
-        setIsWaitingForResponse(me.challenging || null);
-        currentStatusRef.current.challenging = me.challenging || null;
+        queue.setIsQueuing(!!me.isQueuing);
+        queue.currentStatusRef.current.isQueuing = !!me.isQueuing;
+        queue.setIsWaitingForResponse(me.challenging || null);
+        queue.currentStatusRef.current.challenging = me.challenging || null;
       }
 
-      setChallengeStack(users.filter((u) => u.challenging === uid).map((u) => ({ id: u.id, name: u.name })));
+      queue.setChallengeStack(users.filter((u) => u.challenging === id).map((u) => ({ id: u.id, name: u.name })));
     };
 
     channel
@@ -169,87 +86,38 @@ export function useLobby() {
       .on("presence", { event: "join" }, syncState)
       .on("presence", { event: "leave" }, syncState)
       .on("broadcast", { event: "duel_declined" }, (payload: any) => {
-        if (payload.payload.challengerId === uid) {
-          currentStatusRef.current.challenging = null;
-          setIsWaitingForResponse(null);
-          enqueue(() => trackPresence());
+        if (payload.payload.challengerId === id) {
+          console.log("Duel Declined by target");
+          queue.currentStatusRef.current.challenging = null;
+          queue.setIsWaitingForResponse(null);
+          queue.enqueue(() => queue.trackPresence());
         }
       })
       .on("broadcast", { event: "duel_started" }, (payload: any) => {
-        if (payload.payload.targetId === uid || payload.payload.challengerId === uid) {
+        if (payload.payload.targetId === id || payload.payload.challengerId === id) {
+          console.log("Match Starting! Redirecting to room:", payload.payload.roomId);
           router.push(`/room/${payload.payload.roomId}`);
         }
       })
       .subscribe(async (status: string) => {
         if (status === "SUBSCRIBED") {
-          await trackPresence();
+          console.log("Subscribed to Global Lobby");
+          await queue.trackPresence();
         }
       });
 
-    return () => { supabase.removeChannel(channel); };
-  }, [router]);
-
-  useEffect(() => {
-    if (!isQueuing || matchmakingLockRef.current || !username || username === "YOU") return;
-
-    const queueStack = onlineUsers
-      .filter((u) => u.isQueuing)
-      .sort((a, b) => (a.joinedAt || 0) - (b.joinedAt || 0));
-
-    if (queueStack.length >= 2) {
-      const p1 = queueStack[0];
-      const p2 = queueStack[1];
-
-      if (myId === p1.id) {
-        matchmakingLockRef.current = true;
-        const other = p2;
-        const roomId = `queue_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
-
-        enqueue(async () => {
-          const actualName = localStorage.getItem("vlr_duel_username") || username;
-          const { error } = await supabase.from("room").insert([{
-            id: roomId,
-            p1_id: myId,
-            p2_id: other.id,
-            status: "WAITING",
-            p1_joined: false,
-            p2_joined: false,
-            p1_name: actualName,
-            p2_name: other.name,
-            p1_budget: 100,
-            p2_budget: 100
-          }]);
-
-          if (error) {
-            matchmakingLockRef.current = false;
-          } else if (presenceChannelRef.current) {
-            await presenceChannelRef.current.send({
-              type: "broadcast",
-              event: "duel_started",
-              payload: { roomId, challengerId: myId, targetId: other.id },
-            });
-          }
-        });
-      }
-    }
-  }, [isQueuing, onlineUsers, myId, username]);
+    return () => { 
+      console.log("Cleaning up Lobby Channel");
+      supabase.removeChannel(channel); 
+    };
+  }, [myId, username]); 
 
   return {
     myId,
     username,
     setUsername,
     isMounted,
-    isQueuing,
-    onlineUsers,
-    challengeStack,
-    isWaitingForResponse,
-    sendDuelRequest,
-    cancelDuelRequest,
-    acceptDuel,
-    declineDuel,
-    toggleQueue,
-    trackPresence,
-    enqueue,
-    currentStatusRef
+    ...queue,
+    ...matchmaking
   };
 }

@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
+import { getStoredUser } from "@/lib/auth";
+import { Button } from "src/components/ui/Button";
 
 type Player = { name: string; cost: number };
 
 interface Props {
-  myName: string;
   oppName: string;
   myTeam: Player[];
   oppTeam: Player[];
@@ -21,7 +22,6 @@ interface Props {
 }
 
 export default function ResultScreen({
-  myName,
   oppName,
   myTeam,
   oppTeam,
@@ -29,6 +29,7 @@ export default function ResultScreen({
   results,
 }: Props) {
   const { myScore, oppScore, winnerName, iWon, oppWon, isDraw } = results;
+  const { name: myName } = getStoredUser();
 
   const getStatBadgeClass = (side: "me" | "opp") => {
     if (isDraw) return "bg-black text-white";
@@ -128,12 +129,13 @@ export default function ResultScreen({
           </div>
         </div>
 
-        <div className="p-6 border-t-4 border-black bg-neutral-50 flex justify-center">
-          <Link href="/" className="group relative inline-block">
-            <div className="absolute inset-0 bg-black translate-x-1 translate-y-1 group-hover:translate-x-1.5 group-hover:translate-y-1.5 transition-transform" />
-            <div className="relative px-10 py-3 bg-yellow-400 border-2 border-black text-xs font-black uppercase tracking-[0.2em] group-active:translate-x-0.5 group-active:translate-y-0.5 transition-all text-center">
+        <div className="p-4 border-t-4 border-black bg-neutral-50 flex justify-center">
+          <Link href="/">
+            <Button
+              className="!bg-yellow-400 hover:!bg-yellow-300 !text-black border-2 !border-black italic font-black uppercase tracking-tighter shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-x-0.5 active:translate-y-0.5 px-6 py-2 text-sm transition-colors"
+            >
               Return to Lobby
-            </div>
+            </Button>
           </Link>
         </div>
       </div>

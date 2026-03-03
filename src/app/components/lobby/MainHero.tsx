@@ -5,24 +5,21 @@ import UserProfile from "./UserProfile";
 import Link from "next/link";
 import { Button } from "src/components/ui/Button";
 import GlobalChat from "../chat/GlobalChat";
+import { getStoredUser } from "@/lib/auth";
 
 interface MainHeroProps {
-  myId: string;
-  username: string;
-  setUsername: (name: string) => void;
   isQueuing: boolean;
   onQueueAction: () => void;
   onSaveName: (newName: string) => void;
 }
 
 const MainHero = memo(function MainHero({
-  myId,
-  username,
-  setUsername,
   isQueuing,
   onQueueAction,
   onSaveName
 }: MainHeroProps) {
+  const { id: myId, name: username } = getStoredUser();
+
   return (
     <div className="relative flex-1 flex flex-col items-center justify-center p-8 bg-[#F2F2F2] min-h-screen w-full overflow-hidden font-sans">
       <div className="absolute inset-0 z-0 opacity-[0.07] pointer-events-none" 
@@ -49,9 +46,6 @@ const MainHero = memo(function MainHero({
       <div className="relative z-10 w-full flex flex-col items-center">
         <div className="mt-16 md:mt-0 w-full flex justify-center">
           <UserProfile
-            myId={myId}
-            username={username}
-            setUsername={setUsername}
             onSaveName={onSaveName}
           />
         </div>
@@ -108,7 +102,7 @@ const MainHero = memo(function MainHero({
         </div>
       </div>
       
-      <GlobalChat username={username} />
+      <GlobalChat />
     </div>
   );
 });

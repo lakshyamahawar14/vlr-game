@@ -1,26 +1,28 @@
 "use client";
 
-import { useState, memo, useRef } from "react";
+import { useState, memo, useRef, useEffect } from "react";
 import { Button } from "../../../components/ui/Button";
+import { getStoredUser } from "@/lib/auth";
 
 interface UserProfileProps {
-  myId: string;
-  username: string;
-  setUsername: (name: string) => void;
   onSaveName: (newName: string) => void;
 }
 
 const UserProfile = memo(function UserProfile({ 
-  myId, 
-  username, 
-  setUsername, 
   onSaveName 
 }: UserProfileProps) {
+  const { id: myId, name: initialName } = getStoredUser();
+  const [username, setUsername] = useState(initialName);
   const [isEditingName, setIsEditingName] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
+  useEffect(() => {
+    setUsername(initialName);
+  }, [initialName]);
+
   const triggerSave = (finalValue?: string) => {
     const valueToSave = (finalValue !== undefined ? finalValue : username).trim() || "Unknown";
+    console.log("Saving new name:", valueToSave);
     onSaveName(valueToSave);
     setIsEditingName(false);
   };
@@ -33,6 +35,7 @@ const UserProfile = memo(function UserProfile({
       triggerSave(targetValue);
     } else if (e.key === "Escape") {
       setIsEditingName(false);
+      setUsername(initialName);
     }
   };
 
@@ -53,7 +56,7 @@ const UserProfile = memo(function UserProfile({
   return (
     <div 
       ref={containerRef}
-      className="mb-12 border-4 border-black bg-white p-6 flex flex-col items-center gap-4 w-full max-w-sm relative shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]"
+      className="mb-12 border-4 border-black bg-white p-6 flex flex-col items-center gap-4 w-full max-w-[340px] relative shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] mx-auto"
     >
       <div className="absolute top-0 left-0 w-2 h-2 bg-indigo-600" />
       <div className="absolute bottom-0 right-0 w-2 h-2 bg-black" />
@@ -82,7 +85,7 @@ const UserProfile = memo(function UserProfile({
         <Button 
           onClick={handleButtonClick} 
           size="md"
-          className={`italic font-black border-2 !border-black transition-none ${
+          className={`italic font-black border-2 !border-black transition-none shrink-0 ${
             isEditingName 
               ? "!bg-[#0DA643] !text-white hover:!bg-[#0D8A3A]" 
               : "!bg-black !text-white hover:!bg-white hover:!text-black"

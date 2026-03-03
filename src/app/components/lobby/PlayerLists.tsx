@@ -3,10 +3,10 @@
 import { memo } from "react";
 import { PresenceUser } from "@/app/hooks/useLobby";
 import { Button } from "src/components/ui/Button";
+import { getStoredUser } from "@/lib/auth";
 
 interface Props {
   onlineUsers: PresenceUser[];
-  myId: string;
   isWaitingForResponse: string | null;
   onSendDuel: (id: string) => void;
   onCancelDuel: () => void;
@@ -64,8 +64,9 @@ const UserCard = memo(({
 UserCard.displayName = "UserCard";
 
 export default function PlayerLists({ 
-  onlineUsers, myId, isWaitingForResponse, onSendDuel, onCancelDuel 
+  onlineUsers, isWaitingForResponse, onSendDuel, onCancelDuel 
 }: Props) {
+  const { id: myId } = getStoredUser();
   const queueCount = onlineUsers.filter(u => u.isQueuing).length;
 
   return (

@@ -1,17 +1,12 @@
 "use client";
 
+import { getStoredUser } from "@/lib/auth";
 import ArenaHeader from "./ArenaHeader";
 import TeamDisplay from "./TeamDisplay";
 import DraftBoard from "./DraftBoard";
 import { Player } from "../hooks/useRoom";
 
-interface Category {
-  cost: number;
-  players: string[];
-}
-
 interface Props {
-  myName: string;
   oppName: string;
   team: Player[];
   oppTeam: Player[];
@@ -19,12 +14,13 @@ interface Props {
   timer: number;
   status: string | null;
   handlePick: (name: string, cost: number) => void;
-  categories: Category[];
+  categories: any; 
   oppLeft?: boolean;
+  myValue: number;
+  oppValue: number;
 }
 
 export default function Arena({
-  myName,
   oppName,
   team,
   oppTeam,
@@ -33,10 +29,20 @@ export default function Arena({
   status,
   handlePick,
   categories,
-  oppLeft
+  oppLeft,
+  myValue,
+  oppValue
 }: Props) {
-  const isWaiting = status === "WAITING";
+  const { name: myName } = getStoredUser();
+  const isWaiting = status === "WAITING" || status === "READY";
   const isDrafting = status === "DRAFTING";
+
+  const formattedCategories = categories && !Array.isArray(categories) 
+    ? Object.entries(categories).map(([cost, players]) => ({
+        cost: Number(cost),
+        players: players as string[]
+      })).sort((a, b) => b.cost - a.cost)
+    : categories;
 
   return (
     <div className="relative min-h-screen w-full bg-[#F2F2F2] overflow-x-hidden font-sans">
@@ -67,7 +73,7 @@ export default function Arena({
             <div className="flex-1 order-2 lg:order-1">
               <TeamDisplay
                 name={myName}
-                value={team.reduce((a, p) => a + p.cost, 0)}
+                value={myValue}
                 team={team}
                 variant="player"
               />
@@ -79,15 +85,15 @@ export default function Arena({
                 oppTeam={oppTeam}
                 budget={budget}
                 onPick={handlePick}
-                categories={categories}
-                status={status!}
+                categories={formattedCategories}
+                status={status as "DRAFTING"}
               />
             </div>
 
             <div className="flex-1 order-3 lg:order-3">
               <TeamDisplay
                 name={oppName}
-                value={oppTeam.reduce((a, p) => a + p.cost, 0)}
+                value={oppValue}
                 team={oppTeam}
                 variant="opponent"
               />

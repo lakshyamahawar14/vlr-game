@@ -1,5 +1,8 @@
 "use client";
 
+import React from 'react';
+import { Button } from 'src/components/ui/Button';
+
 type Player = { name: string; cost: number };
 
 interface Category {
@@ -39,7 +42,7 @@ export default function DraftBoard({
         const costNum = Number(cost);
 
         return (
-          <div key={cost} className="border-[3px] border-black bg-white flex flex-col shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
+          <div key={`tier-${cost}`} className="border-[3px] border-black bg-white flex flex-col shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]">
             <div className="bg-black text-white px-3 py-1 flex justify-between items-center shrink-0">
               <span className="text-[9px] font-black tracking-[0.2em] uppercase">Tier</span>
               <span className="text-xl font-black italic">${costNum}</span>
@@ -58,44 +61,46 @@ export default function DraftBoard({
                   !canAfford ||
                   isFull;
 
-                return (
-                  <button
-                    key={p}
-                    disabled={isDisabled}
-                    onClick={() => {
-                      if (!isDisabled) onPick(p, costNum);
-                    }}
-                    className={`
-                      relative w-full text-left px-2 py-1 font-black uppercase transition-all border-2 h-[34px] flex items-center
-                      ${
-                        isWaiting
-                          ? "bg-neutral-50 border-neutral-200 text-neutral-300 cursor-not-allowed"
-                          : isPicked
-                          ? "bg-[#A3E635] border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
-                          : isOpponentPicked
-                          ? "bg-red-600 border-black text-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] cursor-not-allowed"
-                          : !canAfford
-                          ? "bg-neutral-50 border-neutral-200 text-neutral-300 border-dashed cursor-not-allowed"
-                          : "bg-white border-black hover:bg-indigo-600 hover:text-white hover:-translate-y-0.5 active:translate-y-0 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
-                      }
-                    `}
-                  >
-                    <div className="flex justify-between items-center w-full relative z-10">
-                      <span className="text-[13px] tracking-tighter leading-none truncate pr-2">{p}</span>
+                let variant: 'primary' | 'secondary' | 'indigo' = 'secondary';
+                let customClasses = "h-[34px] !justify-between !px-2 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]";
 
-                      <div className="flex items-center shrink-0 h-4">
-                        {isWaiting ? (
-                          <span className="text-[7px] opacity-40">LOCKED</span>
-                        ) : isOpponentPicked ? (
-                          <span className="bg-black text-white text-[7px] px-1 py-0.5 font-black">TAKEN</span>
-                        ) : isPicked ? (
-                          <span className="bg-black text-white text-[7px] px-1 py-0.5 font-black">OWNED</span>
-                        ) : !canAfford ? (
-                          <span className="text-[7px] text-red-600">LOW $</span>
-                        ) : null}
-                      </div>
+                if (isPicked) {
+                  customClasses += " !bg-[#A3E635] !text-black !opacity-100";
+                } else if (isOpponentPicked) {
+                  customClasses += " !bg-red-600 !text-white !opacity-100";
+                } else if (!canAfford || isWaiting) {
+                  customClasses += " !bg-neutral-50 !text-neutral-300 border-dashed !shadow-none";
+                } else { 
+                  customClasses += " hover:!bg-indigo-600 hover:!text-white hover:-translate-y-0.5 active:translate-y-0";
+                }
+
+                return (
+                  <Button
+                    key={p}
+                    fullWidth
+                    size="sm"
+                    variant={variant}
+                    disabled={isDisabled}
+                    onClick={() => onPick(p, costNum)}
+                    className={customClasses}
+                    aria-label={`Pick ${p} for ${costNum} dollars`}
+                  >
+                    <span className="text-[13px] tracking-tighter leading-none truncate pr-2 uppercase font-bold">
+                      {p}
+                    </span>
+
+                    <div className="flex items-center shrink-0 h-4">
+                      {isWaiting ? (
+                        <span className="text-[7px] opacity-40 font-black">LOCKED</span>
+                      ) : isOpponentPicked ? (
+                        <span className="bg-black text-white text-[7px] px-1 py-0.5 font-black">TAKEN</span>
+                      ) : isPicked ? (
+                        <span className="bg-black text-white text-[7px] px-1 py-0.5 font-black">OWNED</span>
+                      ) : !canAfford ? (
+                        <span className="text-[7px] text-red-600 font-black">LOW $</span>
+                      ) : null}
                     </div>
-                  </button>
+                  </Button>
                 );
               })}
             </div>

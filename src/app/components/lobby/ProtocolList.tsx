@@ -1,9 +1,6 @@
 import { memo } from "react";
 
 const ProtocolList = memo(function ProtocolList() {
-  // Logic removed as requested. System status defaults to Active.
-  const isOnline = true; 
-
   const protocols = [
     { id: "01", rule: "Join the match by either Queuing up or sending/accepting duel requests to online players." },
     { id: "02", rule: "Five categories of players are available, each with a different cost. Build your roster within the $100 budget." },

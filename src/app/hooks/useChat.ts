@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/lib/supabase";
+import { getStoredUser } from "@/lib/auth";
 
 interface Message {
   id: string;
@@ -26,8 +27,8 @@ export function useChat(passedUsername: string, isOpen: boolean) {
   }, [isOpen]);
 
   useEffect(() => {
-    const id = localStorage.getItem("vlr_duel_id");
-    if (id) setMyId(id);
+    const { id } = getStoredUser();
+    setMyId(id);
 
     const fetchMessages = async () => {
       const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
@@ -52,7 +53,7 @@ export function useChat(passedUsername: string, isOpen: boolean) {
         { event: "INSERT", schema: "public", table: "chat_messages" },
         (payload) => {
           const incoming = payload.new as Message;
-          const currentUserId = localStorage.getItem("vlr_duel_id");
+          const { id: currentUserId } = getStoredUser();
           
           const isFromMe = incoming.sender_id === currentUserId;
           const isDuplicateText = incoming.message === lastSentText.current;
@@ -84,8 +85,8 @@ export function useChat(passedUsername: string, isOpen: boolean) {
   const sendMessage = async (text: string) => {
     if (!text.trim()) return;
 
-    const currentId = localStorage.getItem("vlr_duel_id") || "anon";
-    const tempId = crypto.randomUUID();
+    const { id: currentId } = getStoredUser();
+    const tempId = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2, 15);
     lastSentText.current = text;
 
     const optimisticMsg: Message = {

@@ -3,14 +3,12 @@
 import { useState, useEffect, useRef } from "react";
 import { MessageSquare, Send, X, AlertCircle } from "lucide-react";
 import { useChat } from "@/app/hooks/useChat";
+import { getStoredUser } from "@/lib/auth";
 
-interface GlobalChatProps {
-  username: string;
-}
-
-export default function GlobalChat({ username }: GlobalChatProps) {
+export default function GlobalChat() {
   const [isOpen, setIsOpen] = useState(false);
   const [newMessage, setNewMessage] = useState("");
+  const { name: username } = getStoredUser();
   const { messages, sendMessage, myId, unreadCount } = useChat(username, isOpen);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -111,7 +109,7 @@ export default function GlobalChat({ username }: GlobalChatProps) {
             {unreadCount > 9 ? "9+" : unreadCount}
           </div>
         )}
-        <MessageSquare size={28} strokeWidth={3} />
+        < MessageSquare size={28} strokeWidth={3} />
       </button>
     </div>
   );

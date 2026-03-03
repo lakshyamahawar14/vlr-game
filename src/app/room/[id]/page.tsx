@@ -1,67 +1,53 @@
 "use client";
 
 import { useRoom } from "./hooks/useRoom";
+import { useGame } from "./hooks/useGame";
 import Arena from "./components/Arena";
 import ResultScreen from "./components/ResultScreen";
 import RoomNotFound from "./components/RoomNotFound";
 import ArenaLoading from "./components/ArenaLoading";
 
 export default function RoomPage() {
-  const {
-    params, myName, oppName, isMounted, isLoading, roomExists,
-    team, oppTeam, budget, timer, status, handlePick,
-    categories, rawStats, oppLeft, results
-  } = useRoom();
+  const roomProps = useRoom();
+  const gameProps = useGame(roomProps);
 
-  if (!isMounted) return <ArenaLoading isFetching />;
-
-  if (!roomExists) {
-    return (
-      <main className="min-h-screen w-full flex items-center justify-center">
-        <RoomNotFound roomId={params.id as string} />
-      </main>
-    );
+  if (!roomProps.isMounted || !roomProps.hasChecked) {
+    return <ArenaLoading isFetching />;
   }
 
-  if (isLoading && !status) return <ArenaLoading isFetching />;
-
-  if (status === "WAITING" || status === "READY") {
-    return (
-      <div className="min-h-screen w-full flex items-center justify-center">
-        <ArenaLoading hasPool={!!categories} externalTimer={timer} />
-      </div>
-    );
+  if (!roomProps.roomExists) {
+    return <RoomNotFound roomId={roomProps.params?.id as string} />;
   }
 
-  if (status === "ENDED") {
-    return (
-      <main className="min-h-screen w-full flex items-center justify-center">
-        {results ? (
-          <ResultScreen
-            myName={myName} oppName={oppName}
-            myTeam={team} oppTeam={oppTeam}
-            rawStats={rawStats} results={results}
-          />
-        ) : (
-          <ArenaLoading isEnded />
-        )}
-      </main>
-    );
+  if (roomProps.status === "ENDED") {
+    return gameProps.results ? (
+      <ResultScreen 
+        oppName={roomProps.oppName} 
+        myTeam={gameProps.team} 
+        oppTeam={gameProps.oppTeam} 
+        rawStats={gameProps.rawStats} 
+        results={gameProps.results} 
+      />
+    ) : <ArenaLoading isEnded />;
   }
 
-  if (status === "DRAFTING" && categories) {
-    return (
-      <main className="min-h-screen w-full flex flex-col">
-        <Arena
-          myName={myName} oppName={oppName}
-          team={team} oppTeam={oppTeam}
-          budget={budget} timer={timer}
-          status={status} handlePick={handlePick}
-          categories={categories as any} oppLeft={oppLeft}
-        />
-      </main>
-    );
+  if (roomProps.status === "WAITING" || roomProps.status === "READY") {
+    return <ArenaLoading hasPool={!!gameProps.categories} externalTimer={roomProps.timer} />;
   }
 
-  return <ArenaLoading isFetching />;
+  return (
+    <Arena
+      oppName={roomProps.oppName}
+      team={gameProps.team}
+      oppTeam={gameProps.oppTeam}
+      budget={gameProps.budget}
+      timer={roomProps.timer}
+      status={roomProps.status}
+      handlePick={gameProps.handlePick}
+      categories={gameProps.categories}
+      oppLeft={gameProps.oppLeft}
+      myValue={gameProps.myValue}
+      oppValue={gameProps.oppValue}
+    />
+  );
 }

@@ -11,7 +11,8 @@ function LeaderboardContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const page = parseInt(searchParams.get("page") || "1");
-  const { data, loading, hasMore, localUserId } = useLeaderboard(page);
+  
+  const { data, loading, hasMore } = useLeaderboard(page);
 
   const handlePageChange = (newPage: number) => {
     if (newPage < 1) return;
@@ -42,7 +43,7 @@ function LeaderboardContent() {
           </Link>
         </div>
 
-        <LeaderboardTable data={data} localUserId={localUserId} loading={loading} />
+        <LeaderboardTable data={data} loading={loading} />
 
         <div className="flex justify-between items-center mt-8">
           <div className="hidden md:flex gap-2">
